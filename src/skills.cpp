@@ -1,5 +1,6 @@
-#include "main.h"
+#include "robot/skills.h"
 #include "api.h"
+#include "globals.h"
 #include "lemlib/api.hpp"
 #include "lemlib/chassis/chassis.hpp"
 #include "liblvgl/lvgl.h"
@@ -7,12 +8,15 @@
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
+#include "robot/monte.hpp"
+#include <cmath>
 #include <iostream>
-#include "robot/skills.h"
+#include <random>
 
-using namespace lemlib;
+void skills() {
+  // Start the MCL background task
+  startMCL(chassis);
 
-void x() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
   chassis.moveToPoint(0, 12, 800);
@@ -106,4 +110,6 @@ void x() {
   intake.move_voltage(0);
   chassis.moveToPoint(0, 120, 2000, {.forwards = true}, false);
   chassis.moveToPoint(-64.5, 131.1, 700, {.forwards = true}, false);
+
+  stopMCL();
 }

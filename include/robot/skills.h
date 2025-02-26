@@ -13,6 +13,6 @@
 #include <iostream>
 
 
-void x();
+void skills();
 
 #endif // ROBOT_SKILLS_H

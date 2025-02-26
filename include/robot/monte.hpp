@@ -68,3 +68,20 @@ lemlib::Pose getEstimatedPose();
  * @param west_dist Distance reading from west sensor
  */
 void updateMCL(lemlib::Chassis& chassis, float north_dist, float south_dist, float east_dist, float west_dist);
+
+/**
+ * Background task for running Monte Carlo Localization
+ * @param param Unused parameter required by PROS task API
+ */
+void mclTask(void* param);
+
+/**
+ * Start the MCL background task
+ * @param chassis The chassis to use for localization
+ */
+void startMCL(lemlib::Chassis& chassis);
+
+/**
+ * Stop the MCL background task
+ */
+void stopMCL();

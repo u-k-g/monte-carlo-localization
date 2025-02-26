@@ -143,7 +143,7 @@ bin/monte.cpp.o: src/monte.cpp include/main.h include/api.h \
  include/lemlib/logger/telemetrySink.hpp include/pros/apix.h \
  include/api.h include/pros/device.h include/pros/serial.h \
  include/pros/serial.hpp include/robot/auton.h include/robot/skills.h \
- include/robot/monte.hpp
+ include/robot/monte.hpp include/globals.h
 include/main.h:
 include/api.h:
 include/pros/adi.h:
@@ -390,3 +390,4 @@ include/pros/serial.hpp:
 include/robot/auton.h:
 include/robot/skills.h:
 include/robot/monte.hpp:
+include/globals.h:

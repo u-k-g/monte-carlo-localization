@@ -12,6 +12,7 @@
 #include "robot/monte.hpp"
 #include <random>
 #include <cmath>
+#include "globals.h"
 
 // Global variables (these stay in the cpp file)
 namespace {
@@ -22,6 +23,14 @@ namespace {
 
     // Track the last pose for delta calculations; initialize explicitly.
     lemlib::Pose lastPose(0, 0, 0);
+    
+    // Add these new variables
+    pros::Task* mclTaskHandle = nullptr;
+    bool mclRunning = false;
+    lemlib::Chassis* chassisPtr = nullptr;
+    
+    // Add constants for the task
+    const int MCL_DELAY = 20; // Run at 50Hz
 }
 
 // Initialize particles around an initial pose estimate
@@ -169,4 +178,42 @@ void updateMCL(lemlib::Chassis& chassis,
     
     lemlib::Pose estimatedPose = getEstimatedPose();
     chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
+}
+
+// Add these new functions
+void mclTask(void* param) {
+    if (!chassisPtr) return;
+    
+    initializeParticles(chassisPtr->getPose());
+    
+    while (mclRunning) {
+        // Get sensor readings using get() method
+        float north = dNorth.get();
+        float south = dSouth.get();
+        float east = dEast.get();
+        float west = dWest.get();
+        
+        updateMCL(*chassisPtr, north, south, east, west);
+        pros::delay(MCL_DELAY);
+    }
+}
+
+void startMCL(lemlib::Chassis& chassis) {
+    if (mclTaskHandle != nullptr) {
+        stopMCL(); // Stop existing task if running
+    }
+    
+    chassisPtr = &chassis;
+    mclRunning = true;
+    mclTaskHandle = new pros::Task(mclTask, nullptr, "MCL Task");
+}
+
+void stopMCL() {
+    if (mclTaskHandle != nullptr) {
+        mclRunning = false;
+        pros::delay(MCL_DELAY * 2); // Give task time to stop
+        delete mclTaskHandle;
+        mclTaskHandle = nullptr;
+        chassisPtr = nullptr;
+    }
 }

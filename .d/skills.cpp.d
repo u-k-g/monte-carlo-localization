@@ -1,9 +1,9 @@
-bin/skills.cpp.o: src/skills.cpp include/main.h include/api.h \
- include/pros/adi.h include/pros/colors.h include/pros/device.h \
- include/pros/distance.h include/pros/error.h include/pros/ext_adi.h \
- include/pros/adi.h include/pros/adi.h include/pros/gps.h \
- include/pros/imu.h include/pros/link.h include/pros/llemu.h \
- include/liblvgl/llemu.h include/liblvgl/lvgl.h \
+bin/skills.cpp.o: src/skills.cpp include/robot/skills.h include/main.h \
+ include/api.h include/pros/adi.h include/pros/colors.h \
+ include/pros/device.h include/pros/distance.h include/pros/error.h \
+ include/pros/ext_adi.h include/pros/adi.h include/pros/adi.h \
+ include/pros/gps.h include/pros/imu.h include/pros/link.h \
+ include/pros/llemu.h include/liblvgl/llemu.h include/liblvgl/lvgl.h \
  include/liblvgl/misc/lv_log.h include/liblvgl/lv_conf_internal.h \
  include/liblvgl/lv_conf_kconfig.h include/liblvgl/lv_conf.h \
  include/liblvgl/misc/lv_types.h include/liblvgl/misc/lv_timer.h \
@@ -142,7 +142,9 @@ bin/skills.cpp.o: src/skills.cpp include/main.h include/api.h \
  include/lemlib/logger/infoSink.hpp \
  include/lemlib/logger/telemetrySink.hpp include/pros/apix.h \
  include/api.h include/pros/device.h include/pros/serial.h \
- include/pros/serial.hpp include/robot/auton.h include/robot/skills.h
+ include/pros/serial.hpp include/robot/auton.h include/globals.h \
+ include/robot/monte.hpp
+include/robot/skills.h:
 include/main.h:
 include/api.h:
 include/pros/adi.h:
@@ -387,4 +389,5 @@ include/pros/device.h:
 include/pros/serial.h:
 include/pros/serial.hpp:
 include/robot/auton.h:
-include/robot/skills.h:
+include/globals.h:
+include/robot/monte.hpp:
