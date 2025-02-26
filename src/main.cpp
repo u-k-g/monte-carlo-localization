@@ -9,6 +9,7 @@
 #include "pros/rtos.hpp"
 #include <iostream>
 #include "globals.h"
+#include "robot/mcl.h"
 
 using namespace lemlib;
 
@@ -112,6 +113,8 @@ void autonomous() {
   Auton3();
 }
 
+// Create MCL instance using the existing distance sensors
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -185,6 +188,14 @@ void opcontrol() {
         break;
       }
     }
+
+    
+    
+    // Optionally, update chassis pose with MCL estimate
+    // chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
+    
+    // Print estimated pose for debugging
+
 
     pros::delay(15);
   }

@@ -142,7 +142,7 @@ bin/globals.cpp.o: src/globals.cpp include/main.h include/api.h \
  include/lemlib/logger/infoSink.hpp \
  include/lemlib/logger/telemetrySink.hpp include/pros/apix.h \
  include/api.h include/pros/device.h include/pros/serial.h \
- include/pros/serial.hpp include/robot/auton.h
+ include/pros/serial.hpp include/robot/auton.h include/pros/distance.hpp
 include/main.h:
 include/api.h:
 include/pros/adi.h:
@@ -387,3 +387,4 @@ include/pros/device.h:
 include/pros/serial.h:
 include/pros/serial.hpp:
 include/robot/auton.h:
+include/pros/distance.hpp:

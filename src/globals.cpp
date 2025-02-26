@@ -4,6 +4,7 @@
 #include "lemlib/chassis/chassis.hpp"
 #include "liblvgl/lvgl.h"
 #include "main.h"
+#include "pros/distance.hpp"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
@@ -99,3 +100,9 @@ lemlib::ExpoDriveCurve
 // create the chassis
 lemlib::Chassis chassis(drivetrain, linearController, angularController,
                         sensors, &throttleCurve, &steerCurve);
+
+
+pros::Distance dNorth(2);
+pros::Distance dEast(4);
+pros::Distance dSouth(3);
+pros::Distance dWest(5);
