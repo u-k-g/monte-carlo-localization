@@ -1,7 +1,10 @@
 #pragma once
 
 #include "lemlib/api.hpp"
+#include "pros/rtos.hpp"
+#include "pros/distance.hpp"
 #include <vector>
+#include <random>
 
 // Particle structure definition
 struct Particle {
@@ -85,3 +88,5 @@ void startMCL(lemlib::Chassis& chassis);
  * Stop the MCL background task
  */
 void stopMCL();
+
+lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentPose);

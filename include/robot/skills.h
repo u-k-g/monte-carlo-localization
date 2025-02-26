@@ -1,18 +1,14 @@
-#ifndef ROBOT_SKILLS_H
-#define ROBOT_SKILLS_H
+#pragma once
 
-#include "main.h"
-#include "api.h"
 #include "lemlib/api.hpp"
-#include "lemlib/chassis/chassis.hpp"
-#include "liblvgl/lvgl.h"
-#include "main.h"
-#include "pros/motors.h"
-#include "pros/motors.hpp"
 #include "pros/rtos.hpp"
-#include <iostream>
 
-
+/**
+ * Executes the skills autonomous routine
+ * This function handles the entire skills challenge including:
+ * - Mobile goal manipulation
+ * - Ring scoring
+ * - Path following
+ * - MCL-based localization
+ */
 void skills();
-
-#endif // ROBOT_SKILLS_H

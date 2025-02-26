@@ -1,17 +1,19 @@
-#ifndef ROBOT_AUTON_H
-#define ROBOT_AUTON_H
+#pragma once
 
-// Autonomous functions prototypes
+#include "main.h"
+#include "lemlib/api.hpp"
+
+// Utility functions
 void intake_score(int degrees, int direction);
 void intake_on(int speed);
 void intake_off();
 
-void Auton1();
-void Auton2();
-void Auton3();
-void Auton5();
+// Autonomous routines
+void Auton1();  // Autonomous winpoint blue positive side / red positive side
+void Auton2();  // Autonomous winpoint blue negative side / red negative side
+void Auton3();  // Basic autonomous routine
+void Auton5();  // Skills challenge autonomous
 
-void match1();
-void match2();
-
-#endif // ROBOT_AUTON_H
+// Match specific routines
+void match1();  // Match specific autonomous routine 1
+void match2();  // Match specific autonomous routine 2
