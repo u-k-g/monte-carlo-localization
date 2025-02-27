@@ -1,17 +1,17 @@
 #include "main.h"
 #include "api.h"
+#include "globals.h"
 #include "lemlib/api.hpp"
 #include "lemlib/chassis/chassis.hpp"
+#include "lemlib/timer.hpp"
 #include "liblvgl/lvgl.h"
 #include "main.h"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
 #include <iostream>
-#include "globals.h"
 
 using namespace lemlib;
-
 
 
 /**
@@ -104,10 +104,6 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-
-
-
-
 void autonomous() {
   // x();
   Auton3();
@@ -130,28 +126,26 @@ void autonomous() {
  */
 void opcontrol() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
-  auto start_time = std::chrono::steady_clock::now();
   bool flagged = false;
   lady_brown.move_absolute(0, 200);
   intake.move_velocity(0);
   enum LadyBrownState { IDLE, PRIMED, SCORED };
+  lemlib::Timer matchTimer(66000);
+  lemlib::Timer cornerProtection(76000);
 
   // Static variable to track current state
   static LadyBrownState ladyBrownState = IDLE;
 
   // loop forever
   while (true) {
-    auto current_time = std::chrono::steady_clock::now();
-    auto elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
-                            current_time - start_time)
-                            .count();
 
-    if (elapsed_time >= 70 && !flagged) {
+    if (matchTimer.isDone() && flagged == false) { // warning
       controller.rumble(". - . -");
-      flagged = true;
+    } else if (cornerProtection.isDone()){
+      flagged=true;
     }
-    // get left y and right y positions
-    int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+      // get left y and right y positions
+      int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
     // move the robot
@@ -189,13 +183,10 @@ void opcontrol() {
       }
     }
 
-    
-    
     // Optionally, update chassis pose with MCL estimate
     // chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
-    
-    // Print estimated pose for debugging
 
+    // Print estimated pose for debugging
 
     pros::delay(15);
   }

@@ -89,21 +89,44 @@ void measurementUpdate(float north_dist, float south_dist, float east_dist, floa
     float total_weight = 0.0f;
     
     for (auto &particle : particles) {
-        float north_diff = std::abs(predictSensorReading(particle.pose, 'N') - north_dist);
-        float south_diff = std::abs(predictSensorReading(particle.pose, 'S') - south_dist);
-        float east_diff  = std::abs(predictSensorReading(particle.pose, 'E') - east_dist);
-        float west_diff  = std::abs(predictSensorReading(particle.pose, 'W') - west_dist);
+        float weight_sum = 0.0f;
+        int valid_readings = 0;
         
-        // Use a Gaussian probability model with sigma as the sensor noise parameter.
-        float sigma = 2.0f; 
-        particle.weight = std::exp(-(north_diff*north_diff + south_diff*south_diff +
-                                     east_diff*east_diff + west_diff*west_diff)  
-                                     / (2.0f * sigma * sigma));
+        // Only include valid readings (not -1) in the weight calculation
+        if (north_dist >= 0) {
+            float north_diff = std::abs(predictSensorReading(particle.pose, 'N') - north_dist);
+            weight_sum += north_diff * north_diff;
+            valid_readings++;
+        }
+        if (south_dist >= 0) {
+            float south_diff = std::abs(predictSensorReading(particle.pose, 'S') - south_dist);
+            weight_sum += south_diff * south_diff;
+            valid_readings++;
+        }
+        if (east_dist >= 0) {
+            float east_diff = std::abs(predictSensorReading(particle.pose, 'E') - east_dist);
+            weight_sum += east_diff * east_diff;
+            valid_readings++;
+        }
+        if (west_dist >= 0) {
+            float west_diff = std::abs(predictSensorReading(particle.pose, 'W') - west_dist);
+            weight_sum += west_diff * west_diff;
+            valid_readings++;
+        }
         
-        total_weight += particle.weight;
+        // Only update weights if we have at least one valid reading
+        if (valid_readings > 0) {
+            float sigma = 2.0f;
+            particle.weight = std::exp(-weight_sum / (2.0f * sigma * sigma * valid_readings));
+            total_weight += particle.weight;
+        } else {
+            // If no valid readings, maintain current weight
+            particle.weight = 1.0f / PARTICLE_QUANTITY;
+            total_weight += particle.weight;
+        }
     }
     
-    // Normalize weights so that they sum to 1.
+    // Normalize weights so that they sum to 1
     if (total_weight > 0) {
         for (auto &particle : particles) {
             particle.weight /= total_weight;
@@ -187,11 +210,33 @@ void mclTask(void* param) {
     initializeParticles(chassisPtr->getPose());
     
     while (mclRunning) {
-        // Get sensor readings using get() method
-        float north = dNorth.get();
-        float south = dSouth.get();
-        float east = dEast.get();
-        float west = dWest.get();
+        // Get sensor readings in mm and convert to inches
+        float north = dNorth.get() / 25.4;
+        float south = dSouth.get() / 25.4;
+        float east = dEast.get() / 25.4;
+        float west = dWest.get() / 25.4;
+        
+        // Get both confidence (0-63) and object size (0-400) values
+        int north_conf = dNorth.get_confidence();
+        int south_conf = dSouth.get_confidence();
+        int east_conf = dEast.get_confidence();
+        int west_conf = dWest.get_confidence();
+        
+        int north_size = dNorth.get_object_size();
+        int south_size = dSouth.get_object_size();
+        int east_size = dEast.get_object_size();
+        int west_size = dWest.get_object_size();
+        
+        // Filter readings based on both metrics
+        const int MIN_CONFIDENCE = 45;  // High confidence threshold (max is 63)
+        const int MIN_OBJECT_SIZE = 50; // Minimum object size (walls should be larger than a grey card)
+        const int MAX_OBJECT_SIZE = 300; // Maximum object size (filter out potentially erroneous readings)
+        
+        // Mark readings as invalid (-1) if they don't meet our criteria
+        if (north_conf < MIN_CONFIDENCE || north_size < MIN_OBJECT_SIZE || north_size > MAX_OBJECT_SIZE || north >= 9999) north = -1;
+        if (south_conf < MIN_CONFIDENCE || south_size < MIN_OBJECT_SIZE || south_size > MAX_OBJECT_SIZE || south >= 9999) south = -1;
+        if (east_conf < MIN_CONFIDENCE || east_size < MIN_OBJECT_SIZE || east_size > MAX_OBJECT_SIZE || east >= 9999) east = -1;
+        if (west_conf < MIN_CONFIDENCE || west_size < MIN_OBJECT_SIZE || west_size > MAX_OBJECT_SIZE || west >= 9999) west = -1;
         
         updateMCL(*chassisPtr, north, south, east, west);
         pros::delay(MCL_DELAY);
