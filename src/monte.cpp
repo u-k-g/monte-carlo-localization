@@ -262,3 +262,23 @@ void stopMCL() {
         chassisPtr = nullptr;
     }
 }
+
+// Add this test function after the other functions
+void testParticleInitialization() {
+    // Initialize particles at (0,0,0)
+    lemlib::Pose initialPose(0, 0, 0);
+    initializeParticles(initialPose);
+
+    // Print the pose of each particle after initialization
+    std::cout << "Initial Particle States:" << std::endl;
+    for (size_t i = 0; i < particles.size(); ++i) {
+        std::cout << "Particle " << i << ": x=" << particles[i].pose.x
+                  << ", y=" << particles[i].pose.y
+                  << ", theta=" << particles[i].pose.theta << std::endl;
+    }
+}
+
+int main() {
+    testParticleInitialization();
+    return 0;
+}

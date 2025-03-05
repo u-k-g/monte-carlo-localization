@@ -89,4 +89,10 @@ void startMCL(lemlib::Chassis& chassis);
  */
 void stopMCL();
 
+/**
+ * Test function to verify particle initialization
+ * Initializes particles at (0,0,0) and prints statistics about their distribution
+ */
+void testParticleInitialization();
+
 lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentPose);
