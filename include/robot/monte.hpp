@@ -16,10 +16,6 @@ struct Particle {
         : pose(p), weight(w) {}
 };
 
-// Constants
-const int PARTICLE_QUANTITY = 500; //tune
-const int WALL_DISTANCE_FROM_FIELD_EXTENT = 2; // the distance sensor senses this many inches away from the field extents
-const int FIELD_DIMENSIONS = 144; //12'x12' field
 
 // Function declarations
 /**

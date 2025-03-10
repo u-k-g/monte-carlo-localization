@@ -14,7 +14,11 @@
 #include <cmath>
 #include "globals.h"
 
-// Global variables (these stay in the cpp file)
+
+// Constants
+const int PARTICLE_QUANTITY = 500; //tune
+const int WALL_DISTANCE_FROM_FIELD_EXTENT = 2; // the distance sensor senses this many inches away from the field extents
+
 namespace {
     // Global vector of particles; we'll resize it during initialization.
     std::vector<Particle> particles;
@@ -31,6 +35,20 @@ namespace {
     
     // Add constants for the task
     const int MCL_DELAY = 20; // Run at 50Hz
+    const float FIELD_DIMENSIONS = 140.0f; // Field dimensions in inches (corrected to 140")
+
+    // Sensor offsets relative to the tracking center (in inches)
+    const float NORTH_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
+    const float NORTH_SENSOR_Y_OFFSET = 1.0f; // Example offset, adjust as needed
+
+    const float SOUTH_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
+    const float SOUTH_SENSOR_Y_OFFSET = -1.0f; // Example offset, adjust as needed
+
+    const float EAST_SENSOR_X_OFFSET = 1.0f;  // Example offset, adjust as needed
+    const float EAST_SENSOR_Y_OFFSET = 0.0f;  // Example offset, adjust as needed
+
+    const float WEST_SENSOR_X_OFFSET = -1.0f; // Example offset, adjust as needed
+    const float WEST_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
 }
 
 // Initialize particles around an initial pose estimate
@@ -66,19 +84,49 @@ void motionUpdate(const lemlib::Pose& deltaMotion) {
 // Calculate expected sensor readings for a particle
 float predictSensorReading(const lemlib::Pose& particlePose, const char direction) {
     float expected_distance = 0.0f;
-    
-    switch(direction) {
+    float half_dimension = FIELD_DIMENSIONS / 2.0f; // Half of the field dimension
+    float sensor_x_offset = 0.0f;
+    float sensor_y_offset = 0.0f;
+
+    switch (direction) {
         case 'N':
-            expected_distance = FIELD_DIMENSIONS - particlePose.y;
+            sensor_x_offset = NORTH_SENSOR_X_OFFSET;
+            sensor_y_offset = NORTH_SENSOR_Y_OFFSET;
             break;
         case 'S':
-            expected_distance = particlePose.y;
+            sensor_x_offset = SOUTH_SENSOR_X_OFFSET;
+            sensor_y_offset = SOUTH_SENSOR_Y_OFFSET;
             break;
         case 'E':
-            expected_distance = FIELD_DIMENSIONS - particlePose.x;
+            sensor_x_offset = EAST_SENSOR_X_OFFSET;
+            sensor_y_offset = EAST_SENSOR_Y_OFFSET;
             break;
         case 'W':
-            expected_distance = particlePose.x;
+            sensor_x_offset = WEST_SENSOR_X_OFFSET;
+            sensor_y_offset = WEST_SENSOR_Y_OFFSET;
+            break;
+    }
+
+    // Rotate sensor offsets based on robot's theta
+    float cos_theta = cos(particlePose.theta * M_PI / 180.0f);
+    float sin_theta = sin(particlePose.theta * M_PI / 180.0f);
+
+    float rotated_sensor_x_offset = sensor_x_offset * cos_theta - sensor_y_offset * sin_theta;
+    float rotated_sensor_y_offset = sensor_x_offset * sin_theta + sensor_y_offset * cos_theta;
+
+
+    switch (direction) {
+        case 'N':
+            expected_distance = half_dimension - (particlePose.y + rotated_sensor_y_offset);
+            break;
+        case 'S':
+            expected_distance = (particlePose.y + rotated_sensor_y_offset) + half_dimension;
+            break;
+        case 'E':
+            expected_distance = half_dimension - (particlePose.x + rotated_sensor_x_offset);
+            break;
+        case 'W':
+            expected_distance = (particlePose.x + rotated_sensor_x_offset) + half_dimension;
             break;
     }
     return expected_distance;
@@ -276,9 +324,4 @@ void testParticleInitialization() {
                   << ", y=" << particles[i].pose.y
                   << ", theta=" << particles[i].pose.theta << std::endl;
     }
-}
-
-int main() {
-    testParticleInitialization();
-    return 0;
 }
