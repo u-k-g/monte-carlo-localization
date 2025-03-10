@@ -39,15 +39,15 @@ namespace {
 
     // Sensor offsets relative to the tracking center (in inches)
     const float NORTH_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
-    const float NORTH_SENSOR_Y_OFFSET = 1.0f; // Example offset, adjust as needed
+    const float NORTH_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
 
     const float SOUTH_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
-    const float SOUTH_SENSOR_Y_OFFSET = -1.0f; // Example offset, adjust as needed
+    const float SOUTH_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
 
-    const float EAST_SENSOR_X_OFFSET = 1.0f;  // Example offset, adjust as needed
+    const float EAST_SENSOR_X_OFFSET = 0.0f;  // Example offset, adjust as needed
     const float EAST_SENSOR_Y_OFFSET = 0.0f;  // Example offset, adjust as needed
 
-    const float WEST_SENSOR_X_OFFSET = -1.0f; // Example offset, adjust as needed
+    const float WEST_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
     const float WEST_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
 }
 
