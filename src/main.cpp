@@ -8,7 +8,6 @@
 #include "main.h"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
-#include "robot/monte.hpp"
 #include "pros/rtos.hpp"
 #include <iostream>
 
@@ -107,7 +106,7 @@ void competition_initialize() {}
 
 void autonomous() {
   // x();
-  Auton5();
+  Auton3();
 }
 
 // Create MCL instance using the existing distance sensors
@@ -126,7 +125,6 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   bool flagged = false;
   lady_brown.move_absolute(0, 200);
@@ -144,11 +142,10 @@ void opcontrol() {
     if (matchTimer.isDone() && flagged == false) { // warning
       controller.rumble(". - . -");
     } else if (cornerProtection.isDone()){
-      flagged = true;
+      flagged=true;
     }
-    
-    // get left y and right y positions
-    int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+      // get left y and right y positions
+      int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
     // move the robot

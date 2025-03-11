@@ -102,8 +102,8 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController,
                         sensors, &throttleCurve, &steerCurve);
 
 
-pros::Distance dNorth(4);
-pros::Distance dEast(13);
+pros::Distance dNorth(2);
+pros::Distance dEast(4);
 pros::Distance dSouth(3);
-pros::Distance dWest(16);
+pros::Distance dWest(5);
 
