@@ -38,7 +38,7 @@
 #include "globals.h"
 #include "pros/apix.h"
 #include "robot/auton.h"
-
+#include "robodash/api.h"
 
 /**
  * You should add more #includes here

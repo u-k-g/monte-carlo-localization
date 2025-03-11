@@ -1,7 +1,5 @@
 #pragma once
 
-#include "main.h"
-#include "lemlib/api.hpp"
 
 // Utility functions
 void intake_score(int degrees, int direction);

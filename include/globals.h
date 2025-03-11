@@ -5,7 +5,6 @@
 #include "lemlib/api.hpp"
 #include "pros/motors.hpp"
 #include "pros/adi.hpp"
-#include "pros/rtos.hpp"
 
 // extern tells the compiler that these variables are defined elsewhere (in globals.cpp)
 extern pros::MotorGroup dt_left;
