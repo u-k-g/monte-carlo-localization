@@ -17,7 +17,6 @@
 
 // Constants
 const int PARTICLE_QUANTITY = 500; //tune
-const int WALL_DISTANCE_FROM_FIELD_EXTENT = 2; // the distance sensor senses this many inches away from the field extents
 
 namespace {
     // Global vector of particles; we'll resize it during initialization.
@@ -71,7 +70,7 @@ void initializeParticles(const lemlib::Pose& initialPose) {
 // Update particles based on robot motion (prediction step)
 void motionUpdate(const lemlib::Pose& deltaMotion) {
     // Add noise to the motion update.
-    std::normal_distribution<float> motion_noise(0.0, 0.5);   // 0.5-inch standard deviation
+    std::normal_distribution<float> motion_noise(0.0, 0.75);   // 0.5-inch standard deviation
     std::normal_distribution<float> rotation_noise(0.0, 2.0);   // 2-degree standard deviation
 
     for (auto &particle : particles) {
@@ -252,7 +251,7 @@ void updateMCL(lemlib::Chassis& chassis,
 }
 
 // Add these new functions
-void mclTask(void* param) {
+void mclTask(void* param) { //gets the sensor readings and throws out unreliable readings
     if (!chassisPtr) return;
     
     initializeParticles(chassisPtr->getPose());
@@ -278,7 +277,7 @@ void mclTask(void* param) {
         // Filter readings based on both metrics
         const int MIN_CONFIDENCE = 45;  // High confidence threshold (max is 63)
         const int MIN_OBJECT_SIZE = 50; // Minimum object size (walls should be larger than a grey card)
-        const int MAX_OBJECT_SIZE = 300; // Maximum object size (filter out potentially erroneous readings)
+        const int MAX_OBJECT_SIZE = 401; // Maximum object size (filter out potentially erroneous readings)
         
         // Mark readings as invalid (-1) if they don't meet our criteria
         if (north_conf < MIN_CONFIDENCE || north_size < MIN_OBJECT_SIZE || north_size > MAX_OBJECT_SIZE || north >= 9999) north = -1;
@@ -308,20 +307,5 @@ void stopMCL() {
         delete mclTaskHandle;
         mclTaskHandle = nullptr;
         chassisPtr = nullptr;
-    }
-}
-
-// Add this test function after the other functions
-void testParticleInitialization() {
-    // Initialize particles at (0,0,0)
-    lemlib::Pose initialPose(0, 0, 0);
-    initializeParticles(initialPose);
-
-    // Print the pose of each particle after initialization
-    std::cout << "Initial Particle States:" << std::endl;
-    for (size_t i = 0; i < particles.size(); ++i) {
-        std::cout << "Particle " << i << ": x=" << particles[i].pose.x
-                  << ", y=" << particles[i].pose.y
-                  << ", theta=" << particles[i].pose.theta << std::endl;
     }
 }
