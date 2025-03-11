@@ -21,6 +21,8 @@ namespace {
 
     // Track the last pose for delta calculations; initialize explicitly.
     lemlib::Pose lastPose(0, 0, 0);
+    // Track the last odometry pose for odometry delta calculations
+    lemlib::Pose lastOdomPose(0, 0, 0);
     
     // Add these new variables
     pros::Task* mclTaskHandle = nullptr;
@@ -66,6 +68,7 @@ namespace {
 void initializeParticles(const lemlib::Pose& initialPose) {
     particles.resize(PARTICLE_QUANTITY);
     lastPose = initialPose;
+    lastOdomPose = initialPose;
     
     std::normal_distribution<float> x_dist(initialPose.x, 1.0);
     std::normal_distribution<float> y_dist(initialPose.y, 1.0);
@@ -80,15 +83,15 @@ void initializeParticles(const lemlib::Pose& initialPose) {
 }
 
 // Update particles based on robot motion (prediction step)
-void motionUpdate(const lemlib::Pose& deltaMotion) {
+void motionUpdate(const lemlib::Pose& odomDelta) {
     // Add noise to the motion update.
     std::normal_distribution<float> motion_noise(0.0, 0.25);   // 0.5-inch standard deviation
     std::normal_distribution<float> rotation_noise(0.0, 0.0);   // 2-degree standard deviation
 
     for (auto &particle : particles) {
-        particle.pose.x += deltaMotion.x + motion_noise(gen);
-        particle.pose.y += deltaMotion.y + motion_noise(gen);
-        particle.pose.theta += deltaMotion.theta;
+        particle.pose.x += odomDelta.x + motion_noise(gen);
+        particle.pose.y += odomDelta.y + motion_noise(gen);
+        particle.pose.theta += odomDelta.theta;
     }
 }
 
@@ -162,38 +165,35 @@ void measurementUpdate(float north_dist, float south_dist, float east_dist, floa
             float predicted_north_dist = predictSensorReading(particle.pose, 'N');
             float north_diff = std::abs(predicted_north_dist - north_dist);
             float sigma = getSigma(predicted_north_dist); // Get sigma based on predicted distance
-            weight_sum += north_diff * north_diff;
+            weight_sum += (north_diff * north_diff) / (sigma * sigma);
             valid_readings++;
         }
         if (south_dist >= 0) {
             float predicted_south_dist = predictSensorReading(particle.pose, 'S');
-            float south_diff = std::abs(predictSensorReading(particle.pose, 'S') - south_dist);
+            float south_diff = std::abs(predicted_south_dist - south_dist);
             float sigma = getSigma(predicted_south_dist); // Get sigma based on predicted distance
-            weight_sum += south_diff * south_diff;
+            weight_sum += (south_diff * south_diff) / (sigma * sigma);
             valid_readings++;
         }
         if (east_dist >= 0) {
             float predicted_east_dist = predictSensorReading(particle.pose, 'E');
-            float east_diff = std::abs(predictSensorReading(particle.pose, 'E') - east_dist);
+            float east_diff = std::abs(predicted_east_dist - east_dist);
             float sigma = getSigma(predicted_east_dist); // Get sigma based on predicted distance
-            weight_sum += east_diff * east_diff;
+            weight_sum += (east_diff * east_diff) / (sigma * sigma);
             valid_readings++;
         }
         if (west_dist >= 0) {
             float predicted_west_dist = predictSensorReading(particle.pose, 'W');
             float west_diff = std::abs(predicted_west_dist - west_dist);
             float sigma = getSigma(predicted_west_dist); // Get sigma based on predicted distance
-            weight_sum += west_diff * west_diff;
+            weight_sum += (west_diff * west_diff) / (sigma * sigma);
             valid_readings++;
         }
 
         // Only update weights if we have at least one valid reading
-        float sigma = sigma_far_range; // Default sigma value
         if (valid_readings > 0) {
-            // float sigma; // No longer needed here - declare outside if block
-            // {{ Sigma is now calculated inside each sensor block }}
-            // float sigma = 1.0f; // No longer using fixed sigma here
-            particle.weight = std::exp(-weight_sum / (2.0f * sigma * sigma * valid_readings));
+            float sigma = sigma_far_range; // Default sigma value - not really used anymore
+            particle.weight = std::exp(-weight_sum / (2.0f * valid_readings)); // Corrected weight calculation - removed sigma from denominator and valid_readings is now just a scaling factor
             total_weight += particle.weight;
         } else {
             // If no valid readings, maintain current weight
@@ -254,29 +254,30 @@ lemlib::Pose getEstimatedPose() {
     return estimated;
 }
 
-// Calculate motion delta
-lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentPose) {
+// Calculate motion delta - now calculates odometry delta
+lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentOdomPose) {
     lemlib::Pose delta(
-        currentPose.x - lastPose.x,
-        currentPose.y - lastPose.y,
-        currentPose.theta - lastPose.theta
+        currentOdomPose.x - lastOdomPose.x,
+        currentOdomPose.y - lastOdomPose.y,
+        currentOdomPose.theta - lastOdomPose.theta
     );
-    lastPose = currentPose;
+    lastOdomPose = currentOdomPose;
     return delta;
 }
 
 // Update the Monte Carlo Localization with the current chassis and sensor data.
-void updateMCL(lemlib::Chassis& chassis, 
+void updateMCL(lemlib::Chassis& chassis,
                float north_dist, float south_dist, float east_dist, float west_dist) {
-    lemlib::Pose currentPose = chassis.getPose();
-    lemlib::Pose delta = calculateMotionDelta(currentPose);
-    
-    motionUpdate(delta);
+    lemlib::Pose currentOdomPose = chassis.getPose();
+    lemlib::Pose odomDelta = calculateMotionDelta(currentOdomPose);
+
+    motionUpdate(odomDelta);
     measurementUpdate(north_dist, south_dist, east_dist, west_dist);
     resampleParticles();
-    
+
     lemlib::Pose estimatedPose = getEstimatedPose();
     chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
+    lastPose = estimatedPose;
 }
 
 // Add these new functions
@@ -284,7 +285,8 @@ void mclTask(void* param) { //gets the sensor readings and throws out unreliable
     if (!chassisPtr) return;
     
     initializeParticles(chassisPtr->getPose());
-    lastUpdatedPose = chassisPtr->getPose(); // Initialize lastUpdatedPose
+    lastUpdatedPose = chassisPtr->getPose();
+    lastOdomPose = chassisPtr->getPose();
     
     while (mclRunning) {
         // Get sensor readings in mm and convert to inches
@@ -310,10 +312,10 @@ void mclTask(void* param) { //gets the sensor readings and throws out unreliable
         const int MAX_OBJECT_SIZE = 401; // Maximum object size (filter out potentially erroneous readings)
         
         // Mark readings as invalid (-1) if they don't meet our criteria
-        if (north_conf < MIN_CONFIDENCE || north_size < MIN_OBJECT_SIZE || north_size > MAX_OBJECT_SIZE || north >= 9999) north = -1;
-        if (south_conf < MIN_CONFIDENCE || south_size < MIN_OBJECT_SIZE || south_size > MAX_OBJECT_SIZE || south >= 9999) south = -1;
-        if (east_conf < MIN_CONFIDENCE || east_size < MIN_OBJECT_SIZE || east_size > MAX_OBJECT_SIZE || east >= 9999) east = -1;
-        if (west_conf < MIN_CONFIDENCE || west_size < MIN_OBJECT_SIZE || west_size > MAX_OBJECT_SIZE || west >= 9999) west = -1;
+        if (north_conf < MIN_CONFIDENCE || north_size < MIN_OBJECT_SIZE || north_size > MAX_OBJECT_SIZE || north >= 9999 || north > 140.0) north = -1;
+        if (south_conf < MIN_CONFIDENCE || south_size < MIN_OBJECT_SIZE || south_size > MAX_OBJECT_SIZE || south >= 9999 || south > 140.0) south = -1;
+        if (east_conf < MIN_CONFIDENCE || east_size < MIN_OBJECT_SIZE || east_size > MAX_OBJECT_SIZE || east >= 9999 || east > 140.0) east = -1;
+        if (west_conf < MIN_CONFIDENCE || west_size < MIN_OBJECT_SIZE || west_size > MAX_OBJECT_SIZE || west >= 9999 || west > 140.0) west = -1;
         
         // --- Sensor disabling logic ---
         if (!useNorthSensor) north = -1; // Disable North sensor if flag is false
