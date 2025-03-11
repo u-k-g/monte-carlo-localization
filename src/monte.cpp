@@ -35,7 +35,7 @@ namespace {
     
     // Add constants for the task
     const int MCL_DELAY = 20; // Run at 50Hz
-    const float FIELD_DIMENSIONS = 140.0f; // Field dimensions in inches (corrected to 140")
+    const float FIELD_DIMENSIONS = 142.0f; // Field dimensions in inches (corrected to 140")
 
     // Sensor offsets relative to the tracking center (in inches)
     const float NORTH_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
@@ -111,9 +111,9 @@ float predictSensorReading(const lemlib::Pose& particlePose, const char directio
     float cos_theta = cos(particlePose.theta * M_PI / 180.0f);
     float sin_theta = sin(particlePose.theta * M_PI / 180.0f);
 
+    //finds sensor offsets after rotating (rotation matrix)
     float rotated_sensor_x_offset = sensor_x_offset * cos_theta - sensor_y_offset * sin_theta;
     float rotated_sensor_y_offset = sensor_x_offset * sin_theta + sensor_y_offset * cos_theta;
-
 
     switch (direction) {
         case 'N':
