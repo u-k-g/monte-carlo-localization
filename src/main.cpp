@@ -41,17 +41,6 @@ void initialize() {
   chassis.calibrate();     // calibrate sensors
   chassis.setPose(0, 0, 0);
   lady_brown.set_zero_position_all(0);
-
-  // the default rate is 50. however, if you need to change the rate, you
-  // can do the following.
-  // lemlib::bufferedStdout().setRate(...);
-  // If you use bluetooth or a wired connection, you will want to have a rate of
-  // 10ms
-
-  // for more information on how the formatting for the loggers
-  // works, refer to the fmtlib docs
-
-  // thread to for brain screen and position logging
   pros::Task screenTask([&]() {
     while (true) {
       // print robot location to the brain screen
