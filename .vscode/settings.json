@@ -1,5 +1,6 @@
 {
     "conventionalCommits.scopes": [
-        "monte carlo localization"
+        "monte carlo localization",
+        "screen"
     ]
 }

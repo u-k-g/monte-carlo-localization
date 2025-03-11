@@ -59,8 +59,15 @@ void initialize() {
       pros::lcd::print(1, "Y: %f", chassis.getPose().y);         // y
       pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
       pros::lcd::print(3, "LB Deg: %f", lady_brown.get_position());
+
+      // Print distance sensor values in inches
+      pros::lcd::print(4, "N: %.2f in", dNorth.get_distance() / 25.4);
+      pros::lcd::print(5, "E: %.2f in", dEast.get_distance() / 25.4);
+      pros::lcd::print(6, "S: %.2f in", dSouth.get_distance() / 25.4);
+      pros::lcd::print(7, "W: %.2f in", dWest.get_distance() / 25.4);
+
       // log position telemetry
-      lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
+      lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose()); //log file to sd card
       // delay to save resources
       pros::delay(50);
     }
@@ -106,7 +113,7 @@ void competition_initialize() {}
 
 void autonomous() {
   // x();
-  Auton3();
+  // Auton3();
 }
 
 // Create MCL instance using the existing distance sensors
@@ -184,10 +191,6 @@ void opcontrol() {
       }
     }
 
-    // Optionally, update chassis pose with MCL estimate
-    // chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
-
-    // Print estimated pose for debugging
 
     pros::delay(15);
   }
