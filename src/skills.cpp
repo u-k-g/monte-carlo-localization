@@ -18,7 +18,8 @@ void skills() {
   startMCL(chassis);
 
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-  chassis.setPose(0, 0, 0);
+  intake.set_zero_position(intake.get_position());
+  chassis.setPose(-63, 0, 90);
   chassis.moveToPoint(0, 12, 800);
   chassis.turnToPoint(19, 12, 650, {.forwards = false});
   chassis.moveToPoint(16.5, 12, 850, {.forwards = false, .earlyExitRange = 2},
