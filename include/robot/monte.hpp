@@ -1,34 +1,33 @@
 #pragma once
 
 #include "lemlib/api.hpp"
-#include "pros/rtos.hpp"
 #include "pros/distance.hpp"
-#include <vector>
+#include "pros/rtos.hpp"
 #include <random>
+#include <vector>
 
 // Particle structure definition
 struct Particle {
-    lemlib::Pose pose;  // Use the lemlib::Pose for x, y, theta
-    float weight; // Weight of the particle (probability)
+  lemlib::Pose pose; // Use the lemlib::Pose for x, y, theta
+  float weight;      // Weight of the particle (probability)
 
-    // Constructor - required since lemlib::Pose has no default constructor
-    Particle(const lemlib::Pose& p = lemlib::Pose(0, 0, 0), float w = 0.0f) 
-        : pose(p), weight(w) {}
+  // Constructor - required since lemlib::Pose has no default constructor
+  Particle(const lemlib::Pose &p = lemlib::Pose(0, 0, 0), float w = 0.0f)
+      : pose(p), weight(w) {}
 };
-
 
 // Function declarations
 /**
  * Initialize particles around an initial pose estimate
  * @param initialPose The initial pose estimate from chassis.getPose()
  */
-void initializeParticles(const lemlib::Pose& initialPose);
+void initializeParticles(const lemlib::Pose &initialPose);
 
 /**
  * Update particles based on robot motion (prediction step)
  * @param deltaMotion The change in pose since the last update
  */
-void motionUpdate(const lemlib::Pose& deltaMotion);
+void motionUpdate(const lemlib::Pose &deltaMotion);
 
 /**
  * Calculate expected sensor readings for a particle
@@ -36,7 +35,8 @@ void motionUpdate(const lemlib::Pose& deltaMotion);
  * @param direction Character indicating sensor direction ('N', 'S', 'E', 'W')
  * @return Expected distance reading
  */
-float predictSensorReading(const lemlib::Pose& particlePose, const char direction);
+float predictSensorReading(const lemlib::Pose &particlePose,
+                           const char direction);
 
 /**
  * Update particle weights based on sensor measurements
@@ -45,7 +45,8 @@ float predictSensorReading(const lemlib::Pose& particlePose, const char directio
  * @param east_dist Distance reading from east sensor
  * @param west_dist Distance reading from west sensor
  */
-void measurementUpdate(float north_dist, float south_dist, float east_dist, float west_dist);
+void measurementUpdate(float north_dist, float south_dist, float east_dist,
+                       float west_dist);
 
 /**
  * Resample particles based on their weights
@@ -66,19 +67,20 @@ lemlib::Pose getEstimatedPose();
  * @param east_dist Distance reading from east sensor
  * @param west_dist Distance reading from west sensor
  */
-void updateMCL(lemlib::Chassis& chassis, float north_dist, float south_dist, float east_dist, float west_dist);
+void updateMCL(lemlib::Chassis &chassis, float north_dist, float south_dist,
+               float east_dist, float west_dist);
 
 /**
  * Background task for running Monte Carlo Localization
  * @param param Unused parameter required by PROS task API
  */
-void mclTask(void* param);
+void mclTask(void *param);
 
 /**
  * Start the MCL background task
  * @param chassis The chassis to use for localization
  */
-void startMCL(lemlib::Chassis& chassis);
+void startMCL(lemlib::Chassis &chassis);
 
 /**
  * Stop the MCL background task
@@ -87,8 +89,10 @@ void stopMCL();
 
 /**
  * Test function to verify particle initialization
- * Initializes particles at (0,0,0) and prints statistics about their distribution
+ * Initializes particles at (0,0,0) and prints statistics about their
+ * distribution
  */
 void testParticleInitialization();
 
-lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentPose);
+lemlib::Pose calculateMotionDelta(const lemlib::Pose &currentPose);
+

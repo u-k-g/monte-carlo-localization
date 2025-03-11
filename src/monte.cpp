@@ -54,6 +54,12 @@ namespace {
     const float sigma_close_range = 0.6f; // Sigma for distances below 200mm (approx 7.87 inches)
     const float sigma_far_range = 2.0f;   // Sigma for distances above 200mm
     const float DISTANCE_THRESHOLD_INCHES = 7.87f; // 200mm in inches
+
+    // Add variables for update frequency control
+    int lastUpdateTime = 0; // Timestamp of the last MCL update
+    const int UPDATE_INTERVAL = 1000; // Update interval in milliseconds (1 second)
+    lemlib::Pose lastUpdatedPose(0, 0, 0); // Last pose at which MCL was updated
+    const float MIN_MOTION_THRESHOLD = 0.25f; // Minimum motion in inches to trigger update
 }
 
 // Initialize particles around an initial pose estimate
@@ -278,6 +284,7 @@ void mclTask(void* param) { //gets the sensor readings and throws out unreliable
     if (!chassisPtr) return;
     
     initializeParticles(chassisPtr->getPose());
+    lastUpdatedPose = chassisPtr->getPose(); // Initialize lastUpdatedPose
     
     while (mclRunning) {
         // Get sensor readings in mm and convert to inches
@@ -315,7 +322,18 @@ void mclTask(void* param) { //gets the sensor readings and throws out unreliable
         if (!useWestSensor) west = -1;   // Disable West sensor if flag is false
         // --- End sensor disabling logic ---
         
-        updateMCL(*chassisPtr, north, south, east, west);
+        int currentTime = pros::millis();
+        lemlib::Pose currentPose = chassisPtr->getPose();
+        float deltaX = std::abs(currentPose.x - lastUpdatedPose.x);
+        float deltaY = std::abs(currentPose.y - lastUpdatedPose.y);
+
+        // Check if it's time for an update and if there's sufficient motion
+        if (currentTime - lastUpdateTime >= UPDATE_INTERVAL && (deltaX >= MIN_MOTION_THRESHOLD || deltaY >= MIN_MOTION_THRESHOLD)) {
+            updateMCL(*chassisPtr, north, south, east, west);
+            lastUpdateTime = currentTime;
+            lastUpdatedPose = currentPose; // Update lastUpdatedPose after update
+        }
+
         pros::delay(MCL_DELAY);
     }
 }
