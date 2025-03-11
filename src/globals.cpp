@@ -66,7 +66,7 @@ lemlib::ControllerSettings
     );
 
 // Create a new rotation sensor on port 11 (adjust the port number as needed)
-pros::Rotation horizontalRotation(10);
+pros::Rotation horizontalRotation(4);
 
 // Create a new horizontal tracking wheel using the rotation sensor .5 inches
 // behind and 1 inch to the left of tracking center
@@ -77,7 +77,7 @@ lemlib::TrackingWheel horizontal1(&horizontalRotation, lemlib::Omniwheel::NEW_2,
 lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
                             nullptr, // vertical tracking wheel 2, set to
                                      // nullptr as we don't have a second one
-                            nullptr, // horizontal tracking wheel
+                            &horizontal1, // horizontal tracking wheel
                             nullptr, // horizontal tracking wheel 2, set to
                                      // nullptr as we don't have a second one
                             &imu     // inertial sensor
@@ -102,8 +102,8 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController,
                         sensors, &throttleCurve, &steerCurve);
 
 
-pros::Distance dNorth(2);
-pros::Distance dEast(4);
-pros::Distance dSouth(3);
-pros::Distance dWest(5);
+pros::Distance dNorth(3);
+pros::Distance dEast(17);
+pros::Distance dSouth(10);
+pros::Distance dWest(16);
 

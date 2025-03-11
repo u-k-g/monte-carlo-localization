@@ -103,6 +103,8 @@ void competition_initialize() {}
 void autonomous() {
   // x();
   // Auton3();
+  chassis.setPose(0,0,0);
+  chassis.turnToHeading(90, 3000);
 }
 
 // Create MCL instance using the existing distance sensors
@@ -121,6 +123,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  stopMCL();
   startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   bool flagged = false;
@@ -137,7 +140,7 @@ void opcontrol() {
   while (true) {
 
     if (matchTimer.isDone() && flagged == false) { // warning
-      controller.rumble(". - . -");
+      // controller.rumble(". - . -");
     } else if (cornerProtection.isDone()) {
       flagged = true;
     }
@@ -179,15 +182,6 @@ void opcontrol() {
         break;
       }
     }
-
-
     pros::delay(15);
   }
-
-  // lady brown control logic, pushing the button once will move it to primed
-  // postion in degrees then run the intake motor until the button is pressed
-  // again then the motor will stop then pushing the button [r1] will move the
-  // lady brown to the scored position in degrees
-
-  // delay to save resources
 }

@@ -11,7 +11,7 @@
 
 
 // Constants
-const int PARTICLE_QUANTITY = 500; //tune
+const int PARTICLE_QUANTITY = 5000; //tune
 
 namespace {
     // Global vector of particles; we'll resize it during initialization.
@@ -43,6 +43,17 @@ namespace {
 
     const float WEST_SENSOR_X_OFFSET = 0.0f; // Example offset, adjust as needed
     const float WEST_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
+
+    // Add boolean flags to control sensor usage
+    bool useNorthSensor = false;
+    bool useSouthSensor = false;
+    bool useEastSensor = false;
+    bool useWestSensor = true;
+
+    // Add sigma values for distance-dependent noise
+    const float sigma_close_range = 0.6f; // Sigma for distances below 200mm (approx 7.87 inches)
+    const float sigma_far_range = 2.0f;   // Sigma for distances above 200mm
+    const float DISTANCE_THRESHOLD_INCHES = 7.87f; // 200mm in inches
 }
 
 // Initialize particles around an initial pose estimate
@@ -50,9 +61,9 @@ void initializeParticles(const lemlib::Pose& initialPose) {
     particles.resize(PARTICLE_QUANTITY);
     lastPose = initialPose;
     
-    std::normal_distribution<float> x_dist(initialPose.x, 3.0);
-    std::normal_distribution<float> y_dist(initialPose.y, 3.0);
-    std::normal_distribution<float> theta_dist(initialPose.theta, 10.0);
+    std::normal_distribution<float> x_dist(initialPose.x, 1.0);
+    std::normal_distribution<float> y_dist(initialPose.y, 1.0);
+    std::normal_distribution<float> theta_dist(initialPose.theta, 0.0); // No theta variation
 
     for (auto& particle : particles) {
         particle = Particle(
@@ -65,13 +76,13 @@ void initializeParticles(const lemlib::Pose& initialPose) {
 // Update particles based on robot motion (prediction step)
 void motionUpdate(const lemlib::Pose& deltaMotion) {
     // Add noise to the motion update.
-    std::normal_distribution<float> motion_noise(0.0, 0.75);   // 0.5-inch standard deviation
-    std::normal_distribution<float> rotation_noise(0.0, 2.0);   // 2-degree standard deviation
+    std::normal_distribution<float> motion_noise(0.0, 0.25);   // 0.5-inch standard deviation
+    std::normal_distribution<float> rotation_noise(0.0, 0.0);   // 2-degree standard deviation
 
     for (auto &particle : particles) {
         particle.pose.x += deltaMotion.x + motion_noise(gen);
         particle.pose.y += deltaMotion.y + motion_noise(gen);
-        particle.pose.theta += deltaMotion.theta + rotation_noise(gen);
+        particle.pose.theta += deltaMotion.theta;
     }
 }
 
@@ -129,36 +140,53 @@ float predictSensorReading(const lemlib::Pose& particlePose, const char directio
 // Update particle weights based on sensor measurements
 void measurementUpdate(float north_dist, float south_dist, float east_dist, float west_dist) {
     float total_weight = 0.0f;
-    
+
     for (auto &particle : particles) {
         float weight_sum = 0.0f;
         int valid_readings = 0;
-        
+
+        // --- Function to get distance-dependent sigma ---
+        auto getSigma = [&](float predicted_distance) {
+            return (predicted_distance < DISTANCE_THRESHOLD_INCHES) ? sigma_close_range : sigma_far_range;
+        };
+
+
         // Only include valid readings (not -1) in the weight calculation
         if (north_dist >= 0) {
-            float north_diff = std::abs(predictSensorReading(particle.pose, 'N') - north_dist);
+            float predicted_north_dist = predictSensorReading(particle.pose, 'N');
+            float north_diff = std::abs(predicted_north_dist - north_dist);
+            float sigma = getSigma(predicted_north_dist); // Get sigma based on predicted distance
             weight_sum += north_diff * north_diff;
             valid_readings++;
         }
         if (south_dist >= 0) {
+            float predicted_south_dist = predictSensorReading(particle.pose, 'S');
             float south_diff = std::abs(predictSensorReading(particle.pose, 'S') - south_dist);
+            float sigma = getSigma(predicted_south_dist); // Get sigma based on predicted distance
             weight_sum += south_diff * south_diff;
             valid_readings++;
         }
         if (east_dist >= 0) {
+            float predicted_east_dist = predictSensorReading(particle.pose, 'E');
             float east_diff = std::abs(predictSensorReading(particle.pose, 'E') - east_dist);
+            float sigma = getSigma(predicted_east_dist); // Get sigma based on predicted distance
             weight_sum += east_diff * east_diff;
             valid_readings++;
         }
         if (west_dist >= 0) {
-            float west_diff = std::abs(predictSensorReading(particle.pose, 'W') - west_dist);
+            float predicted_west_dist = predictSensorReading(particle.pose, 'W');
+            float west_diff = std::abs(predicted_west_dist - west_dist);
+            float sigma = getSigma(predicted_west_dist); // Get sigma based on predicted distance
             weight_sum += west_diff * west_diff;
             valid_readings++;
         }
-        
+
         // Only update weights if we have at least one valid reading
+        float sigma = sigma_far_range; // Default sigma value
         if (valid_readings > 0) {
-            float sigma = 2.0f;
+            // float sigma; // No longer needed here - declare outside if block
+            // {{ Sigma is now calculated inside each sensor block }}
+            // float sigma = 1.0f; // No longer using fixed sigma here
             particle.weight = std::exp(-weight_sum / (2.0f * sigma * sigma * valid_readings));
             total_weight += particle.weight;
         } else {
@@ -167,7 +195,7 @@ void measurementUpdate(float north_dist, float south_dist, float east_dist, floa
             total_weight += particle.weight;
         }
     }
-    
+
     // Normalize weights so that they sum to 1
     if (total_weight > 0) {
         for (auto &particle : particles) {
@@ -279,6 +307,13 @@ void mclTask(void* param) { //gets the sensor readings and throws out unreliable
         if (south_conf < MIN_CONFIDENCE || south_size < MIN_OBJECT_SIZE || south_size > MAX_OBJECT_SIZE || south >= 9999) south = -1;
         if (east_conf < MIN_CONFIDENCE || east_size < MIN_OBJECT_SIZE || east_size > MAX_OBJECT_SIZE || east >= 9999) east = -1;
         if (west_conf < MIN_CONFIDENCE || west_size < MIN_OBJECT_SIZE || west_size > MAX_OBJECT_SIZE || west >= 9999) west = -1;
+        
+        // --- Sensor disabling logic ---
+        if (!useNorthSensor) north = -1; // Disable North sensor if flag is false
+        if (!useSouthSensor) south = -1; // Disable South sensor if flag is false
+        if (!useEastSensor) east = -1;   // Disable East sensor if flag is false
+        if (!useWestSensor) west = -1;   // Disable West sensor if flag is false
+        // --- End sensor disabling logic ---
         
         updateMCL(*chassisPtr, north, south, east, west);
         pros::delay(MCL_DELAY);

@@ -142,8 +142,11 @@ bin/monte.cpp.o: src/monte.cpp include/main.h include/api.h \
  include/lemlib/logger/infoSink.hpp \
  include/lemlib/logger/telemetrySink.hpp include/pros/apix.h \
  include/api.h include/pros/device.h include/pros/serial.h \
- include/pros/serial.hpp include/robot/auton.h include/robot/skills.h \
- include/robot/monte.hpp include/pros/distance.hpp include/globals.h
+ include/pros/serial.hpp include/robot/auton.h include/robodash/api.h \
+ include/robodash/core.h include/robodash/views/console.hpp \
+ include/robodash/views/image.hpp include/robodash/views/selector.hpp \
+ include/robot/skills.h include/robot/monte.hpp include/pros/distance.hpp \
+ include/globals.h
 include/main.h:
 include/api.h:
 include/pros/adi.h:
@@ -388,6 +391,11 @@ include/pros/device.h:
 include/pros/serial.h:
 include/pros/serial.hpp:
 include/robot/auton.h:
+include/robodash/api.h:
+include/robodash/core.h:
+include/robodash/views/console.hpp:
+include/robodash/views/image.hpp:
+include/robodash/views/selector.hpp:
 include/robot/skills.h:
 include/robot/monte.hpp:
 include/pros/distance.hpp:

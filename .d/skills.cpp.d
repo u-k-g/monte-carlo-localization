@@ -142,8 +142,10 @@ bin/skills.cpp.o: src/skills.cpp include/robot/skills.h \
  include/pros/screen.h include/pros/vision.hpp include/pros/vision.h \
  include/globals.h include/api.h include/main.h include/globals.h \
  include/pros/apix.h include/pros/device.h include/pros/serial.h \
- include/pros/serial.hpp include/robot/auton.h include/robot/monte.hpp \
- include/pros/distance.hpp
+ include/pros/serial.hpp include/robot/auton.h include/robodash/api.h \
+ include/robodash/core.h include/robodash/views/console.hpp \
+ include/robodash/views/image.hpp include/robodash/views/selector.hpp \
+ include/robot/monte.hpp include/pros/distance.hpp
 include/robot/skills.h:
 include/lemlib/api.hpp:
 include/lemlib/pid.hpp:
@@ -390,5 +392,10 @@ include/pros/device.h:
 include/pros/serial.h:
 include/pros/serial.hpp:
 include/robot/auton.h:
+include/robodash/api.h:
+include/robodash/core.h:
+include/robodash/views/console.hpp:
+include/robodash/views/image.hpp:
+include/robodash/views/selector.hpp:
 include/robot/monte.hpp:
 include/pros/distance.hpp:
