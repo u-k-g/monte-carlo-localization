@@ -92,20 +92,23 @@ void initializeParticles(const lemlib::Pose& initialPose) {
 
 // Update particles based on robot motion (prediction step)
 void motionUpdate(const lemlib::Pose& localOdomDelta) {
-    float motion_magnitude = std::sqrt(localOdomDelta.x * localOdomDelta.x + localOdomDelta.y * localOdomDelta.y);
-    bool add_noise = motion_magnitude > MOTION_NOISE_THRESHOLD; // Use MOTION_NOISE_THRESHOLD for comparison
-
-    std::normal_distribution<float> motion_noise(0.0, 0.1);
-    std::normal_distribution<float> rotation_noise(0.0, 0.0);
+    std::normal_distribution<float> motion_noise(0.0, 0.05); // Reduced noise value
+    std::normal_distribution<float> rotation_noise(0.0, 0.1);
 
     for (auto &particle : particles) {
-        float theta_rad = particle.pose.theta * M_PI / 180.0f; // Convert to radians
-        float dx_global = localOdomDelta.x * cos(theta_rad) - localOdomDelta.y * sin(theta_rad); // Transform local x to global x
-        float dy_global = localOdomDelta.x * sin(theta_rad) + localOdomDelta.y * cos(theta_rad); // Transform local y to global y
+        // Convert from robot-local to global coordinate frame
+        float theta_rad = particle.pose.theta * M_PI / 180.0f;
+        float dx_global = localOdomDelta.x * cos(theta_rad) - localOdomDelta.y * sin(theta_rad);
+        float dy_global = localOdomDelta.x * sin(theta_rad) + localOdomDelta.y * cos(theta_rad);
 
-        particle.pose.x += dx_global + (add_noise ? motion_noise(gen) : 0.0f); // Apply global x delta with noise
-        particle.pose.y += dy_global + (add_noise ? motion_noise(gen) : 0.0f); // Apply global y delta with noise
-        particle.pose.theta += localOdomDelta.theta + (add_noise ? rotation_noise(gen) : 0.0f); // Apply theta delta with noise (no transformation needed for theta)
+        // Apply motion update with small noise
+        particle.pose.x += dx_global + motion_noise(gen);
+        particle.pose.y += dy_global + motion_noise(gen);
+        particle.pose.theta += localOdomDelta.theta + rotation_noise(gen);
+
+        // Normalize theta to keep it within a reasonable range
+        particle.pose.theta = fmod(particle.pose.theta, 360.0f);
+        if (particle.pose.theta < 0) particle.pose.theta += 360.0f;
     }
 }
 
@@ -292,87 +295,101 @@ lemlib::Pose getEstimatedPose() {
 
 // Calculate motion delta - now calculates odometry delta
 lemlib::Pose calculateMotionDelta(const lemlib::Pose& currentOdomPose) {
+    // Calculate the change in position since the last update
     lemlib::Pose delta(
         currentOdomPose.x - lastOdomPose.x,
         currentOdomPose.y - lastOdomPose.y,
         currentOdomPose.theta - lastOdomPose.theta
     );
+
+    // Update the last odometry position for next time
     lastOdomPose = currentOdomPose;
+
+    // Add debug output to verify deltas are small when robot is static
+    printf("Motion Delta: (%.4f, %.4f, %.4f)\n", delta.x, delta.y, delta.theta);
+
     return delta;
 }
 
 // Update the Monte Carlo Localization with the current chassis and sensor data.
 void updateMCL(lemlib::Chassis& chassis, float north_dist, float south_dist, float east_dist, float west_dist) {
-    lemlib::Pose localOdomDelta = chassis.getPose(); // Local movement since last setPose
-    motionUpdate(localOdomDelta); // Using localOdomDelta here
+    lemlib::Pose currentOdomPose = chassis.getPose();
+    lemlib::Pose motionDelta = calculateMotionDelta(currentOdomPose);
+
+    // Only update particles if there's significant motion
+    float motion_magnitude = std::sqrt(motionDelta.x*motionDelta.x + motionDelta.y*motionDelta.y);
+    if (motion_magnitude > MOTION_NOISE_THRESHOLD) {
+        motionUpdate(motionDelta);
+    }
+
     measurementUpdate(north_dist, south_dist, east_dist, west_dist);
     resampleParticles();
 
     lemlib::Pose estimatedPose = getEstimatedPose();
-    printf("Odometry: (%.2f, %.2f, %.2f), MCL: (%.2f, %.2f, %.2f)\n", // Debug print for comparison
-           chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta,
-           estimatedPose.x, estimatedPose.y, estimatedPose.theta);
     chassis.setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
 }
 
 // Add these new functions
-void mclTask(void* param) { //gets the sensor readings and throws out unreliable readings
+void mclTask(void* param) {
     if (!chassisPtr) return;
-    
+
+    // Initialize with current pose
     initializeParticles(chassisPtr->getPose());
-    lastUpdatedPose = chassisPtr->getPose();
-    lastOdomPose = chassisPtr->getPose();
+    lastOdomPose = chassisPtr->getPose(); // Record initial pose for delta calculation
+    lastUpdateTime = pros::millis();
     
     while (mclRunning) {
-        float north = dNorth.get() / 25.4;
-        float south = dSouth.get() / 25.4;
-        float east = dEast.get() / 25.4;
-        float west = dWest.get() / 25.4;
-        
+        // Get distance readings and filter unreliable values
+        float north = useNorthSensor ? dNorth.get() / 25.4 : -1;
+        float south = useSouthSensor ? dSouth.get() / 25.4 : -1;
+        float east = useEastSensor ? dEast.get() / 25.4 : -1;
+        float west = useWestSensor ? dWest.get() / 25.4 : -1;
+
+        // Apply confidence and size filters
         int north_conf = dNorth.get_confidence();
         int south_conf = dSouth.get_confidence();
         int east_conf = dEast.get_confidence();
         int west_conf = dWest.get_confidence();
-        
+
         int north_size = dNorth.get_object_size();
         int south_size = dSouth.get_object_size();
         int east_size = dEast.get_object_size();
         int west_size = dWest.get_object_size();
-        
+
         const int MIN_CONFIDENCE = 45;
         const int MIN_OBJECT_SIZE = 50;
         const int MAX_OBJECT_SIZE = 401;
-        
+
         if (north_conf < MIN_CONFIDENCE || north_size < MIN_OBJECT_SIZE || north_size > MAX_OBJECT_SIZE || north >= 9999 || north > 210) north = -1;
         if (south_conf < MIN_CONFIDENCE || south_size < MIN_OBJECT_SIZE || south_size > MAX_OBJECT_SIZE || south >= 9999 || south > 210) south = -1;
         if (east_conf < MIN_CONFIDENCE || east_size < MIN_OBJECT_SIZE || east_size > MAX_OBJECT_SIZE || east >= 9999 || east > 210) east = -1;
         if (west_conf < MIN_CONFIDENCE || west_size < MIN_OBJECT_SIZE || west_size > MAX_OBJECT_SIZE || west >= 9999 || west > 210) west = -1;
-        
+
         if (!useNorthSensor) north = -1;
         if (!useSouthSensor) south = -1;
         if (!useEastSensor) east = -1;
         if (!useWestSensor) west = -1;
-        
+
         int currentTime = pros::millis();
-        lemlib::Pose currentPose = chassisPtr->getPose();
 
-        printf("Time: %d, Current Pose X: %.2f, Y: %.2f, Update Interval: %d, Last Update: %d\n",
-               currentTime, currentPose.x, currentPose.y, UPDATE_INTERVAL, lastUpdateTime);
-
+        // Only update MCL periodically or when significant motion has occurred
         if (currentTime - lastUpdateTime >= UPDATE_INTERVAL) {
-            printf("MCL Update Triggered!\n");
-            lemlib::Pose poseBeforeUpdate = chassisPtr->getPose();
-            updateMCL(*chassisPtr, north, south, east, west);
-            lemlib::Pose poseAfterUpdate = chassisPtr->getPose();
+            // Get current odometry pose before update
+            lemlib::Pose currentOdomPose = chassisPtr->getPose();
 
-            float deltaX_mcl = poseAfterUpdate.x - poseBeforeUpdate.x;
-            float deltaY_mcl = poseAfterUpdate.y - poseBeforeUpdate.y;
+            // Calculate motion delta since last update
+            lemlib::Pose motionDelta = calculateMotionDelta(currentOdomPose);
+
+            // Apply the MCL update with the motion delta and sensor readings
+            motionUpdate(motionDelta);
+            measurementUpdate(north, south, east, west);
+            resampleParticles();
+
+            // Get estimated pose and update chassis position
+            lemlib::Pose estimatedPose = getEstimatedPose();
+            chassisPtr->setPose(estimatedPose.x, estimatedPose.y, estimatedPose.theta);
 
             lastUpdateTime = currentTime;
-            lastUpdatedPose = chassisPtr->getPose();
-        } else {
-            float deltaX_mcl = 0.0f;
-            float deltaY_mcl = 0.0f;
         }
 
         pros::delay(MCL_DELAY);
