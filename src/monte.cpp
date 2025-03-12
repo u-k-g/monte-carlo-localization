@@ -45,26 +45,32 @@ namespace {
     const float WEST_SENSOR_Y_OFFSET = 0.0f; // Example offset, adjust as needed
 
     // Add boolean flags to control sensor usage
-    bool useNorthSensor = true;
+    bool useNorthSensor = false;
     bool useSouthSensor = true;
-    bool useEastSensor = true;
-    bool useWestSensor = true;
+    bool useEastSensor = false;
+    bool useWestSensor = false;
 
     // Add sigma values for distance-dependent noise
-    const float sigma_close_range = 0.6f; // Sigma for distances below 200mm (approx 7.87 inches)
-    const float sigma_far_range = 2.0f;   // Sigma for distances above 200mm
+    const float sigma_close_range = 0.3f; // Sigma for distances below 200mm (approx 7.87 inches)
+    const float sigma_far_range = 1.0f;   // Sigma for distances above 200mm
     const float DISTANCE_THRESHOLD_INCHES = 7.87f; // 200mm in inches
 
     // Add variables for update frequency control
     int lastUpdateTime = 0; // Timestamp of the last MCL update
     const int UPDATE_INTERVAL = 1000; // Update interval in milliseconds (1 second)
     lemlib::Pose lastUpdatedPose(0, 0, 0); // Last pose at which MCL was updated
-    const float MIN_MOTION_THRESHOLD = 0.1f; // Minimum motion in inches to trigger update
+    const float MIN_MOTION_THRESHOLD = 0.25f; // Minimum motion in inches to trigger update
 
     // Add constant for motion noise threshold
     const float MOTION_NOISE_THRESHOLD = 0.25f; // Threshold to consider motion as static
 
     const float UNIFORM_WEIGHT_FACTOR = 0.0001f; // Small uniform weight factor, tune as needed
+
+    // Add variables to store previous sensor readings
+    float prev_north_dist = -1.0f; // Initialize with an out-of-range value
+    float prev_south_dist = -1.0f;
+    float prev_east_dist = -1.0f;
+    float prev_west_dist = -1.0f;
 }
 
 // Initialize particles around an initial pose estimate
@@ -156,6 +162,22 @@ float predictSensorReading(const lemlib::Pose& particlePose, const char directio
 
 // Update particle weights based on sensor measurements
 void measurementUpdate(float north_dist, float south_dist, float east_dist, float west_dist) {
+    const float DISTANCE_CHANGE_THRESHOLD = 0.15f; // 0.15 inches or approx 3mm
+
+    // Check if sensor readings have changed significantly
+    if (std::abs(north_dist - prev_north_dist) <= DISTANCE_CHANGE_THRESHOLD &&
+        std::abs(south_dist - prev_south_dist) <= DISTANCE_CHANGE_THRESHOLD &&
+        std::abs(east_dist - prev_east_dist) <= DISTANCE_CHANGE_THRESHOLD &&
+        std::abs(west_dist - prev_west_dist) <= DISTANCE_CHANGE_THRESHOLD) {
+        // Sensor readings haven't changed significantly, skip update
+        printf("Sensor readings unchanged, skipping measurement update.\n"); // Optional debug print
+        prev_north_dist = north_dist; // Update previous readings even if skipping update
+        prev_south_dist = south_dist;
+        prev_east_dist = east_dist;
+        prev_west_dist = west_dist;
+        return; // Exit the function early, skipping the weight update
+    }
+
     float total_weight = 0.0f;
 
     for (auto &particle : particles) {
@@ -216,6 +238,12 @@ void measurementUpdate(float north_dist, float south_dist, float east_dist, floa
             particle.weight /= total_weight;
         }
     }
+
+    // Update previous sensor readings for the next iteration
+    prev_north_dist = north_dist;
+    prev_south_dist = south_dist;
+    prev_east_dist = east_dist;
+    prev_west_dist = west_dist;
 }
 
 // Resample particles based on their weights using systematic resampling.

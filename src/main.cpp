@@ -171,7 +171,7 @@ void opcontrol() {
         break;
 
       case PRIMED:
-        lady_brown.move_absolute(460, 200); // Maintain primed position
+        lady_brown.move_absolute(500, 200); // Maintain primed position
         intake.move_velocity(0);            // Stop intake
         ladyBrownState = SCORED;
         break;
