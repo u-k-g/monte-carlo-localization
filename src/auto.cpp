@@ -9,21 +9,21 @@
 #include <string>
 
 using namespace lemlib;
-void intake_score(int degrees, int direction) {
-  intake.move_relative(degrees, 600 * direction);
-  intake.brake();
+void hooks_score(int degrees, int direction) {
+  hooks.move_relative(degrees, 600 * direction);
+  hooks.brake();
 }
 
-void intake_on(int speed) {
+void hooks_on(int speed) {
   if (speed == 0) {
-    intake.brake();
+    hooks.brake();
     return;
   }
 
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
 }
 
-void intake_off() { intake_on(0); }
+void hooks_off() { hooks_on(0); }
 
 void Auton1() {
   // Autonomous winpoint blue positive side / red positive side
@@ -34,14 +34,14 @@ void Auton1() {
   chassis.moveToPose(-60, 0, 0, 5000);
   chassis.turnToHeading(90, 1000);
   chassis.moveToPoint(-65, 0, 1000, {.forwards = false});
-  intake_score(2000, 1);
+  hooks_score(2000, 1);
 
   // pick up ring and score
 
   chassis.setPose(-62, 0, 90, false);
-  intake_on(600);
+  hooks_on(600);
   chassis.moveToPose(-24, -48, 135, 2700, {}, false);
-  intake_off();
+  hooks_off();
 
   clamp.toggle();
   chassis.turnToHeading(180, 2000);
@@ -50,7 +50,7 @@ void Auton1() {
   clamp.toggle();
 
   pros::delay(500);
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
 
   chassis.turnToHeading(0, 1000);
   chassis.moveToPoint(-20, -2, 5000, {.forwards = true, .maxSpeed = 40}, false);
@@ -67,14 +67,14 @@ void Auton2() {
   chassis.moveToPose(-60, 0, 180, 5000);
   chassis.turnToHeading(90, 1000);
   chassis.moveToPoint(-65, 0, 1000, {.forwards = false});
-  intake_score(2000, 1);
+  hooks_score(2000, 1);
 
   // pick up ring and score
 
   chassis.setPose(-62, 0, 90, false);
-  intake_on(600);
+  hooks_on(600);
   chassis.moveToPose(-24, 48, 45, 2700, {}, false);
-  intake_off();
+  hooks_off();
 
   clamp.toggle();
   chassis.turnToHeading(0, 2000);
@@ -83,7 +83,7 @@ void Auton2() {
   clamp.toggle();
 
   pros::delay(500);
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
 
   chassis.turnToHeading(180, 1000);
   chassis.moveToPoint(-20, 2, 5000, {.forwards = true}, false);
@@ -94,21 +94,21 @@ void Auton3() {
   chassis.moveToPose(0, -36, 0, 2700, {.forwards = false, .maxSpeed = 70},
                      false);
   clamp.extend();
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
 }
 
 void Auton5() {
   // Skills challenge autonomous
 
   // Chassis position: coordinate from the back of the drivetrain
-  // Chassis heading: front intake is direction
+  // Chassis heading: front hooks is direction
 
   // Step 1. We start under the red alliance stake.
   // With the preloaded ring, we will score on the stake using our wall stake
   // mechanism.
 
   chassis.setPose(-165, 0, 90, false);
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
   // -- TODO: Score on the red alliance stake
 
   // Step 2. We will go to pick up the top left mobile goal
@@ -125,7 +125,7 @@ void Auton5() {
   // robot. This will take a lot of precise coding and movement to nail
   // autonomously
 
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
 
   // -- Score bottom right ring (1)
 
@@ -178,7 +178,7 @@ void Auton5() {
 
   chassis.moveToPose(0, 0, 0, 5000, {.forwards = true}, false);
   pros::delay(500);
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
 
   // Step 6. We will pick up the bottom right’s mobile goal to score more rings
   // onto.
@@ -193,7 +193,7 @@ void Auton5() {
 
   // -- Pick up the top right ring (2)
 
-  intake_score(1000, 1);
+  hooks_score(1000, 1);
 
   chassis.moveToPose(-60, -60, 135, 5000, {.forwards = true}, false);
   pros::delay(200);
@@ -242,7 +242,7 @@ void match1() {
   clamp.extend();
 
   chassis.turnToPoint(-23.3, 48.8, 1000, {}, false);
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
   chassis.moveToPoint(-20.3, 50.8, 1000, {.maxSpeed = 50}, false);
 
   chassis.turnToPoint(-67.1, 67, 1000);
@@ -260,7 +260,7 @@ void match2() {
   chassis.moveToPose(0, -36, 0, 2700, {.forwards = false, .maxSpeed = 70},
                      false);
   clamp.extend();
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
 
   pros::delay(6000);
 

@@ -18,7 +18,7 @@ pros::MotorGroup dt_right({1, -6, 19}, pros::v5::MotorGears::blue,
 
 pros::Motor lady_brown(14, pros::v5::MotorGears::green,
                        pros::v5::MotorUnits::degrees);
-pros::MotorGroup intake({11, 20}, pros::v5::MotorGears::blue,
+pros::Motor hooks(11, pros::v5::MotorGears::blue,
                         pros::v5::MotorUnits::degrees);
 pros::Motor preroller(20, pros::v5::MotorGears::green,
                       pros::v5::MotorUnits::degrees); // intake motor on port 9
@@ -27,7 +27,6 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 pros::Imu imu(8);
 
-int intakeSpeed = 600;
 
 pros::adi::Pneumatics clamp('A', false);
 
@@ -45,7 +44,7 @@ lemlib::ControllerSettings
                      0,   // integral gain (kI) try 0.1
                      8,   // derivative gain (kD) 
                     3,   // anti windup
-                     .5,   // small error range, in inches
+                     1,   // small error range, in inches .5
                      100, // small error range timeout, in milliseconds
                      3,   // large error range, in inches
                      500, // large error range timeout, in milliseconds
@@ -58,11 +57,11 @@ lemlib::ControllerSettings
                       0,   // integral gain (kI) try 0.1
                       14,  // derivative gain (kD)
                       3,   // anti windup
-                      .5,   // small error range, in degrees
+                      1,   // small error range, in degrees .5
                       100, // small error range timeout, in milliseconds
-                      2,   // large error range, in degrees
+                      3,   // large error range, in degrees
                       500, // large error range timeout, in milliseconds
-                      2    // maximum acceleration (slew)
+                      0    // maximum acceleration (slew)
     );
 
 // Create a new rotation sensor on port 11 (adjust the port number as needed)
@@ -71,7 +70,7 @@ pros::Rotation horizontalRotation(-4);
 // Create a new horizontal tracking wheel using the rotation sensor .5 inches
 // behind and 1 inch to the left of tracking center
 lemlib::TrackingWheel horizontal1(&horizontalRotation, lemlib::Omniwheel::NEW_2,
-                                  0.953);
+                                  1.703);
 
 // Update the OdomSensors object to include the new horizontal tracking wheel
 lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel

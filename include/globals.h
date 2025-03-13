@@ -10,11 +10,10 @@
 extern pros::MotorGroup dt_left;
 extern pros::MotorGroup dt_right;
 extern pros::Motor lady_brown;
-extern pros::MotorGroup intake;
+extern pros::Motor hooks;
 extern pros::Motor preroller;
 extern pros::Controller controller;
 extern pros::Imu imu;
-extern int intakeSpeed;
 extern pros::adi::Pneumatics clamp;
 extern lemlib::Drivetrain drivetrain;
 extern lemlib::ControllerSettings linearController;

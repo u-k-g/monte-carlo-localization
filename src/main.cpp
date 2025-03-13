@@ -9,9 +9,9 @@
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
-#include <iostream>
 #include "robot/monte.hpp"
 #include "robot/skills.h"
+#include <iostream>
 
 using namespace lemlib;
 
@@ -57,7 +57,8 @@ void initialize() {
       pros::lcd::print(7, "W: %.2f in", dWest.get_distance() / 25.4);
 
       // log position telemetry
-      lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose()); //log file to sd card
+      lemlib::telemetrySink()->info("Chassis pose: {}",
+                                    chassis.getPose()); // log file to sd card
       // delay to save resources
       pros::delay(50);
     }
@@ -72,10 +73,6 @@ void initialize() {
 void disabled() {
   // unclamp
   clamp.retract();
-  dt_left.move_velocity(0);
-  dt_right.move_velocity(0);
-  intake.move_velocity(0);
-  lady_brown.move_velocity(0);
 }
 
 /**
@@ -101,9 +98,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-void autonomous() {
-  skills1();
-}
+void autonomous() { skills1(); }
 
 // Create MCL instance using the existing distance sensors
 
@@ -121,13 +116,13 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  skills1();
+  // autonomous();
   stopMCL();
   // startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   bool flagged = false;
   lady_brown.move_absolute(0, 200);
-  intake.move_velocity(0);
+  hooks.move_velocity(0);
   enum LadyBrownState { IDLE, PRIMED, SCORED };
   lemlib::Timer matchTimer(66000);
   lemlib::Timer cornerProtection(76000);
@@ -151,11 +146,15 @@ void opcontrol() {
     chassis.tank(leftY, rightY);
 
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-      intake.move_velocity(intakeSpeed);
+
+      preroller.move_velocity(200);
+      hooks.move_velocity(600);
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-      intake.move_velocity(-intakeSpeed);
+      hooks.move_velocity(-600);
+      preroller.move_velocity(-200);
     } else {
-      intake.brake();
+      hooks.brake();
+      preroller.brake();
     }
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
       clamp.toggle();
@@ -164,15 +163,16 @@ void opcontrol() {
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
       switch (ladyBrownState) {
       case IDLE:
-        lady_brown.move_absolute(66, 200); // Move to primed position
-        intake.move_velocity(intakeSpeed); // Start intake
+        lady_brown.move_absolute(72, 200); // Move to primed position
+        hooks.move_velocity(600);          // Start intake
         ladyBrownState = PRIMED;
         break;
 
       case PRIMED:
         lady_brown.move_absolute(500, 200); // Maintain primed position
-        intake.move_velocity(0);            // Stop intake
-        ladyBrownState = SCORED;
+        hooks.move_velocity(0);             // Stop intake
+        ladyBrownState = SCORED; // optimal scoring when robot is 7.5" away from
+                                 // wall / when north sensor reads 17"
         break;
 
       case SCORED:

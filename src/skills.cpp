@@ -18,7 +18,7 @@ void skills() {
   // startMCL(chassis);
 
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-  intake.set_zero_position(intake.get_position());
+  hooks.set_zero_position(hooks.get_position());
   chassis.setPose(0, 0, 0);
   chassis.moveToPoint(0, 12, 800);
   chassis.turnToPoint(19, 12, 650, {.forwards = false});
@@ -32,7 +32,7 @@ void skills() {
 
   // Turn to the above ring - Start intake and hook, and move there
   chassis.turnToPoint(24, 36.75, 850, {}, false);
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
   chassis.moveToPoint(24, 36.75, 1000, {}, false);
 
   chassis.turnToPoint(48, 36.75, 850, {}, false);
@@ -50,21 +50,21 @@ void skills() {
   pros::delay(1000);
   chassis.moveToPoint(54.5, 1.5, 1000, {.forwards = false, .maxSpeed = 40},
                       true);
-  intake.move_voltage(-12000);
+  hooks.move_voltage(-12000);
   pros::delay(200); // Move at max voltage for 1 second
-  intake.move_voltage(0);
+  hooks.move_voltage(0);
   pros::delay(500);
   clamp.retract();
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
   chassis.moveToPoint(-29, 13, 4000,
                       {.forwards = false, .maxSpeed = 50, .earlyExitRange = 2},
                       false);
   clamp.extend();
-  intake.move_voltage(-12000);
+  hooks.move_voltage(-12000);
   pros::delay(200); // Move at max voltage for 1 second
-  intake.move_voltage(0);
+  hooks.move_voltage(0);
   pros::delay(500);
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
   chassis.turnToPoint(-29.8, 37, 1000, {}, false);
   pros::delay(1000);
   chassis.moveToPoint(-29.8, 37, 1000, {.maxSpeed = 50}, false);
@@ -83,17 +83,17 @@ void skills() {
   chassis.turnToPoint(-67, 0, 1000, {.forwards = false}, false);
   chassis.moveToPoint(-67, 0, 1000, {.forwards = false, .maxSpeed = 50}, false);
   clamp.retract();
-  intake.move_voltage(-12000);
+  hooks.move_voltage(-12000);
   pros::delay(200); // Move at max voltage for 1 second
-  intake.move_voltage(0);
+  hooks.move_voltage(0);
   pros::delay(500);
   chassis.turnToPoint(-3, 62, 3000, {.forwards = true, .maxSpeed = 90}, false);
   pros::delay(1000);
   chassis.moveToPoint(-3, 62, 2000, {.forwards = true, .maxSpeed = 70}, false);
   // tune this delay
-  intake.move_voltage(12000);
+  hooks.move_voltage(12000);
   pros::delay(600); // Move at max voltage for 1 second
-  intake.move_voltage(0);
+  hooks.move_voltage(0);
   pros::delay(500);
   chassis.moveToPoint(45, 104, 3000, {.forwards = true, .maxSpeed = 70}, false);
   pros::delay(1000);
@@ -101,14 +101,14 @@ void skills() {
   chassis.moveToPoint(-25, 108, 5000, {.forwards = false, .maxSpeed = 70},
                       false);
   clamp.extend();
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
   chassis.moveToPoint(-64.5, 131.1, 2000, {.forwards = false}, false);
   chassis.moveToPoint(-55, 120, 500, {.forwards = true}, false);
   chassis.moveToPoint(-64.5, 131.1, 700, {.forwards = false}, false);
   clamp.retract();
-  intake.move_voltage(-12000);
+  hooks.move_voltage(-12000);
   pros::delay(200); // Move at max voltage for 1 second
-  intake.move_voltage(0);
+  hooks.move_voltage(0);
   chassis.moveToPoint(0, 120, 2000, {.forwards = true}, false);
   chassis.moveToPoint(-64.5, 131.1, 700, {.forwards = true}, false);
 
@@ -117,7 +117,7 @@ void skills() {
 
 void skills1() {
   // Set pre-constants
-  intake.set_zero_position(intake.get_position());
+  hooks.set_zero_position_all(0);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
 
@@ -125,7 +125,7 @@ void skills1() {
   /* ############################################## */
 
   // De-hook into the alliance stake
-  intake.move_absolute(600, 600);
+  hooks.move_absolute(600, 600);
   pros::delay(750);
 
   // Move to the center, then turn to and touch the right side Mogo.
@@ -141,62 +141,73 @@ void skills1() {
 
   // Turn to the above ring - Start intake and hook, and move there
   chassis.turnToPoint(24, 38.75, 850, {}, false);
-  intake.move_velocity(600);
+  hooks.move_velocity(600);
+  preroller.move_velocity(200);
   chassis.moveToPoint(24, 38.75, 1000);
 
   // Immediately move to the farthest ring. A couple of other things happen
   // while this is going on
-  chassis.moveToPose(48, 90, 0, 2050,
-                     {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = 2},
+  chassis.moveToPose(45, 92, 0, 2050,
+                     {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = 1},
                      true);
 
   chassis.waitUntil(50);
 
   // Set the hook to a high-torque rpm to get the best loading possible, waits
   // for the MoveToPose to end.
-  intake.move_velocity(400);
+  hooks.move_velocity(400);
+  preroller.move_velocity(200);
+
   chassis.waitUntilDone();
   // Turn to a point ~1.5 tiles away from the right neutral stake
 
-  /*
-  lady_brown.move_absolute(100, 200);
-  chassis.turnToPoint(40, 62.5, 800, {.forwards = false});
+  lady_brown.move_absolute(72, 200); // optimal scoring when robot is 7.5" away
+                                     // from wall / when north sensor reads 17"
+
+  chassis.waitUntilDone();
+
+  chassis.moveToPoint(45, 95, 700, {}, true);
+
+  pros::delay(2000);
+  hooks.brake();
+  hooks.move_relative(-10, 400);
+  chassis.turnToPoint(40, 64, 800, {.forwards = false});
 
   // Actually move there
-  chassis.moveToPoint(40, 62.5, 1500, {.forwards = false}, true);
+  chassis.moveToPoint(40, 64, 1500, {.forwards = false}, true);
   // Immediately hit against the lady brown to ensure appropriate fit.
   //  Wait until 20 inches passed to get to the point behind the lady brown -
   //  stop the hook here.
   chassis.waitUntil(30);
-  intake.brake();
+  preroller.move_velocity(200);
 
   chassis.waitUntilDone();
 
   // Turn to the Neutral wall stake.
-  chassis.turnToPoint(78, 62.5, 600);
+  chassis.turnToPoint(78, 64, 600);
 
   // Move there
-  chassis.moveToPoint(72, 62.5, 900, {.forwards = true, .maxSpeed = 50}, true);
+  chassis.moveToPoint(54, 64, 900, {.forwards = true, .maxSpeed = 50}, true);
 
   // At 18 inches of movement, stop the intake in advance of the neutral wall
   // stake
-  chassis.waitUntil(18);
-  preroller.brake();
 
   chassis.waitUntilDone();
 
   // Allow the robot to settle, then move the lady brown to score on the neutral
   // stake.
 
-  lady_brown.move_absolute(500, 200);
+
+
+  lady_brown.move_absolute(500, 200); //this is the line im talking about
+  /*
 
   // Move back to the 5th tile edge, and restart the intake 15 inches into the
   // movement.
-  chassis.moveToPoint(47, 62.5, 750, {.forwards = false, .maxSpeed = 75});
+  chassis.moveToPoint(72, 63, 2000);
+  hooks.move_velocity(600);
+  chassis.moveToPoint(47, 63, 750, {.forwards = false, .maxSpeed = 75});
   chassis.waitUntil(5);
-
-  preroller.move_velocity(600);
-  intake.move_velocity(200);
 
   // Point the robot towards the home side wall, and put the lady brown down.
   chassis.turnToPoint(47, 0, 950);
@@ -208,12 +219,11 @@ void skills1() {
                       {.forwards = true, .maxSpeed = 45, .earlyExitRange = 2});
 
   // Start the hook at a higher speed rpm
-  intake.move_velocity(200);
-
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
   // Start at 10 inches into the movement - schedule a check every 5 inches
-  for
-    // if the hook is stuck.
-    chassis.waitUntil(10);
+  // if the hook is stuck.
+  chassis.waitUntil(10);
 
   chassis.waitUntilDone();
   // Wait for two seconds at the edge to ensure rings get put onto the mogo.
@@ -222,7 +232,7 @@ void skills1() {
   // Turn, then Move to the point where the last ring was nudged to collect it
   // for top ring
   chassis.turnToPoint(61, 17, 1000);
-  chassis.moveToPoint(61, 17, 1000,
+  chassis.moveToPoint(63, 17, 1000,
                       {.forwards = true, .maxSpeed = 50, .earlyExitRange = 4});
 
   // Turn away to position the mogo in the corner, waiting to let the hook put
@@ -231,9 +241,12 @@ void skills1() {
       -30, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE}, false);
   pros::delay(1000);
   // Let the last ring go when the hook gets stuck
-  intake.move_velocity(-200);
   // Let the mogo go
+
   clamp.retract();
+
+  hooks.brake();
+  preroller.brake();
 
   // Move back a little to ensure the mogo goes into the corner.
   chassis.moveToPoint(
@@ -351,44 +364,44 @@ void skills1() {
   intake.move_velocity(200);
 
   // Start at 10 inches into the movement - schedule a check every 5 inches
-  for
-    // if the hook is stuck.
-    chassis.waitUntil(10);
+for
+  // if the hook is stuck.
+  chassis.waitUntil(10);
 
-  chassis.waitUntilDone();
-  // Wait for two seconds at the edge to ensure rings get put onto the mogo.
-  pros::delay(1000);
+chassis.waitUntilDone();
+// Wait for two seconds at the edge to ensure rings get put onto the mogo.
+pros::delay(1000);
 
-  // Turn, then Move to the point where the last ring was nudged to collect it
-  // for top ring
-  chassis.turnToPoint(-62, 17, 1000);
-  chassis.moveToPoint(-62, 17, 2000,
-                      {.forwards = true, .maxSpeed = 50, .earlyExitRange = 4});
+// Turn, then Move to the point where the last ring was nudged to collect it
+// for top ring
+chassis.turnToPoint(-62, 17, 1000);
+chassis.moveToPoint(-62, 17, 2000,
+                    {.forwards = true, .maxSpeed = 50, .earlyExitRange = 4});
 
-  // Turn away to position the mogo in the corner, waiting to let the hook put
-  // all items onto the mogo.
-  chassis.turnToHeading(30, 1000, {}, false);
-  pros::delay(1300);
-  // Let the last ring go when the hook gets stuck
-  intake.move_velocity(-200);
-  pros::delay(200);
-  // Let the mogo go
-  clamp.retract();
+// Turn away to position the mogo in the corner, waiting to let the hook put
+// all items onto the mogo.
+chassis.turnToHeading(30, 1000, {}, false);
+pros::delay(1300);
+// Let the last ring go when the hook gets stuck
+intake.move_velocity(-200);
+pros::delay(200);
+// Let the mogo go
+clamp.retract();
 
-  // Move back a little to ensure the mogo goes into the corner.
-  chassis.moveToPoint(
-      -64, 6, 1000, {.forwards = false, .maxSpeed = 50, .earlyExitRange = 1.5},
-      false);
+// Move back a little to ensure the mogo goes into the corner.
+chassis.moveToPoint(-64, 6, 1000,
+                    {.forwards = false, .maxSpeed = 50, .earlyExitRange = 1.5},
+                    false);
 
-  // Stop the intake and hook.
-  preroller.brake();
-  intake.brake();
+// Stop the intake and hook.
+preroller.brake();
+intake.brake();
 
-  // Move to the top edge of the first tile, preparing for alignment. Then
-  move
-      // back into the wall to use the distance sensor to reorient.
-      chassis.moveToPose(-48, 20, -90, 2050, {.forwards = true, .maxSpeed = 80},
-                         true);
+// Move to the top edge of the first tile, preparing for alignment. Then
+move
+    // back into the wall to use the distance sensor to reorient.
+    chassis.moveToPose(-48, 20, -90, 2050, {.forwards = true, .maxSpeed = 80},
+                       true);
 
-  */
+*/
 }
