@@ -11,6 +11,7 @@
 #include "pros/rtos.hpp"
 #include <iostream>
 #include "robot/monte.hpp"
+#include "robot/skills.h"
 
 using namespace lemlib;
 
@@ -101,10 +102,7 @@ void competition_initialize() {}
  */
 
 void autonomous() {
-  // x();
-  // Auton3();
-  chassis.setPose(0,0,0);
-  chassis.turnToHeading(90, 3000);
+  skills1();
 }
 
 // Create MCL instance using the existing distance sensors
@@ -123,8 +121,9 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  skills1();
   stopMCL();
-  startMCL(chassis);
+  // startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   bool flagged = false;
   lady_brown.move_absolute(0, 200);

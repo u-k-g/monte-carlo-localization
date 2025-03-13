@@ -66,7 +66,7 @@ lemlib::ControllerSettings
     );
 
 // Create a new rotation sensor on port 11 (adjust the port number as needed)
-pros::Rotation horizontalRotation(4);
+pros::Rotation horizontalRotation(-4);
 
 // Create a new horizontal tracking wheel using the rotation sensor .5 inches
 // behind and 1 inch to the left of tracking center

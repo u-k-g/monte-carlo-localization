@@ -146,7 +146,7 @@ bin/main.cpp.o: src/main.cpp include/main.h include/api.h \
  include/robodash/core.h include/robodash/views/console.hpp \
  include/robodash/views/image.hpp include/robodash/views/selector.hpp \
  include/globals.h include/lemlib/timer.hpp include/robot/monte.hpp \
- include/pros/distance.hpp
+ include/pros/distance.hpp include/robot/skills.h
 include/main.h:
 include/api.h:
 include/pros/adi.h:
@@ -400,3 +400,4 @@ include/globals.h:
 include/lemlib/timer.hpp:
 include/robot/monte.hpp:
 include/pros/distance.hpp:
+include/robot/skills.h:
