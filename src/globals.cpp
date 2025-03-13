@@ -34,7 +34,7 @@ pros::adi::Pneumatics clamp('A', false);
 lemlib::Drivetrain drivetrain(
     &dt_left,  // left motor group
     &dt_right, // right motor group
-    13,
+    12.786,
     lemlib::Omniwheel::OLD_325, // using new 4" omnis
     480,                        // drivetrain rpm is 360
     3 // horizontal drift is 2. If we had traction wheels, it would have been 8
@@ -71,7 +71,7 @@ pros::Rotation horizontalRotation(-4);
 // Create a new horizontal tracking wheel using the rotation sensor .5 inches
 // behind and 1 inch to the left of tracking center
 lemlib::TrackingWheel horizontal1(&horizontalRotation, lemlib::Omniwheel::NEW_2,
-                                  0.5);
+                                  0.953);
 
 // Update the OdomSensors object to include the new horizontal tracking wheel
 lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel

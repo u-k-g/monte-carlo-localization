@@ -10,7 +10,7 @@
 #include <random>
 
 // Constants
-const int PARTICLE_QUANTITY = 5000; // tune
+const int PARTICLE_QUANTITY = 7500; // tune
 
 namespace {
 // Global vector of particles; we'll resize it during initialization.
