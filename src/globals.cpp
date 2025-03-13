@@ -41,11 +41,11 @@ lemlib::Drivetrain drivetrain(
 );
 
 lemlib::ControllerSettings
-    linearController(6,   // proportional gain (kP) 27
-                     0,   // integral gain (kI)
-                     8,   // derivative gain (kD) 320
-                     3,   // anti windup
-                     1,   // small error range, in inches
+    linearController(6,   // proportional gain (kP) 
+                     0,   // integral gain (kI) try 0.1
+                     8,   // derivative gain (kD) 
+                    3,   // anti windup
+                     .5,   // small error range, in inches
                      100, // small error range timeout, in milliseconds
                      3,   // large error range, in inches
                      500, // large error range timeout, in milliseconds
@@ -55,14 +55,14 @@ lemlib::ControllerSettings
 // angular motion controller
 lemlib::ControllerSettings
     angularController(2.1, // proportional gain (kP)
-                      0,   // integral gain (kI)
+                      0,   // integral gain (kI) try 0.1
                       14,  // derivative gain (kD)
                       3,   // anti windup
-                      1,   // small error range, in degrees
+                      .5,   // small error range, in degrees
                       100, // small error range timeout, in milliseconds
-                      3,   // large error range, in degrees
+                      2,   // large error range, in degrees
                       500, // large error range timeout, in milliseconds
-                      0    // maximum acceleration (slew)
+                      2    // maximum acceleration (slew)
     );
 
 // Create a new rotation sensor on port 11 (adjust the port number as needed)
@@ -87,7 +87,7 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
 lemlib::ExpoDriveCurve
     throttleCurve(3,    // joystick deadband out of 127
                   10,   // minimum output where drivetrain will move out of 127
-                  1.019 // expo curve gain
+                  0.992 // expo curve gain
     );
 
 // input curve for steer input during driver control

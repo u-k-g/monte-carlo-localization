@@ -162,157 +162,149 @@ void motionUpdate(const lemlib::Pose &localOdomDelta) {
 // Calculate expected sensor readings for a particle
 float predictSensorReading(const lemlib::Pose &particlePose,
                            const char direction) {
-  float expected_distance = 0.0f; // Declare expected_distance here
   float half_dimension = FIELD_DIMENSIONS / 2.0f; // 72 inches
   float sensor_x = particlePose.x;
   float sensor_y = particlePose.y;
+  float theta =
+      particlePose.theta * M_PI / 180.0f; // Robot orientation in radians
 
-  // For simplicity, assume offset = 0 since you confirmed it’s not the issue
+  // Define the sensor's FOV (±12° from center)
+  const float FOV_HALF_ANGLE = 12.0f * M_PI / 180.0f; // 12° in radians
+
+  // Direction-specific center angle (assuming 0° is north)
+  float sensor_angle = 0.0f;
   switch (direction) {
   case 'N':
-    expected_distance = half_dimension - sensor_y; // Distance to y = 72
-    break;
+    sensor_angle = 0.0f;
+    break; // Up (y = 72)
   case 'S':
-    expected_distance = sensor_y + half_dimension; // Distance to y = -72
-    break;
+    sensor_angle = M_PI;
+    break; // Down (y = -72)
   case 'E':
-    expected_distance = half_dimension - sensor_x; // Distance to x = 72
-    break;
+    sensor_angle = M_PI / 2.0f;
+    break; // Right (x = 72)
   case 'W':
-    expected_distance = sensor_x + half_dimension; // Distance to x = -72
-    break;
+    sensor_angle = 3.0f * M_PI / 2.0f;
+    break; // Left (x = -72)
   default:
-    return -1.0f; // Invalid direction
+    return -1.0f;
   }
 
-  // Clamp to positive values (sensors don’t measure negative distances)
-  if (expected_distance < 0)
-    expected_distance = 0;
+  // Adjust sensor angle based on robot orientation
+  float center_angle = sensor_angle + theta;
 
-  return expected_distance;
+  // Calculate distances to boundaries along the edges of the FOV cone
+  float left_angle = center_angle - FOV_HALF_ANGLE;
+  float right_angle = center_angle + FOV_HALF_ANGLE;
+
+  // Parametric line equations: x = sensor_x + t * cos(angle), y = sensor_y + t
+  // * sin(angle) Find intersection with boundaries (t = distance to boundary)
+  float distances[4]; // Distances to north, south, east, west boundaries
+
+  // North boundary (y = 72)
+  float t_north_left = (half_dimension - sensor_y) / sin(left_angle);
+  float t_north_right = (half_dimension - sensor_y) / sin(right_angle);
+  distances[0] = (t_north_left > 0 && std::isfinite(t_north_left))
+                     ? t_north_left
+                     : std::numeric_limits<float>::max();
+  distances[0] =
+      std::min(distances[0], (t_north_right > 0 && std::isfinite(t_north_right))
+                                 ? t_north_right
+                                 : std::numeric_limits<float>::max());
+
+  // South boundary (y = -72)
+  float t_south_left = (-half_dimension - sensor_y) / sin(left_angle);
+  float t_south_right = (-half_dimension - sensor_y) / sin(right_angle);
+  distances[1] = (t_south_left > 0 && std::isfinite(t_south_left))
+                     ? t_south_left
+                     : std::numeric_limits<float>::max();
+  distances[1] =
+      std::min(distances[1], (t_south_right > 0 && std::isfinite(t_south_right))
+                                 ? t_south_right
+                                 : std::numeric_limits<float>::max());
+
+  // East boundary (x = 72)
+  float t_east_left = (half_dimension - sensor_x) / cos(left_angle);
+  float t_east_right = (half_dimension - sensor_x) / cos(right_angle);
+  distances[2] = (t_east_left > 0 && std::isfinite(t_east_left))
+                     ? t_east_left
+                     : std::numeric_limits<float>::max();
+  distances[2] =
+      std::min(distances[2], (t_east_right > 0 && std::isfinite(t_east_right))
+                                 ? t_east_right
+                                 : std::numeric_limits<float>::max());
+
+  // West boundary (x = -72)
+  float t_west_left = (-half_dimension - sensor_x) / cos(left_angle);
+  float t_west_right = (-half_dimension - sensor_x) / cos(right_angle);
+  distances[3] = (t_west_left > 0 && std::isfinite(t_west_left))
+                     ? t_west_left
+                     : std::numeric_limits<float>::max();
+  distances[3] =
+      std::min(distances[3], (t_west_right > 0 && std::isfinite(t_west_right))
+                                 ? t_west_right
+                                 : std::numeric_limits<float>::max());
+
+  // Find the minimum positive distance within FOV
+  float min_distance = std::numeric_limits<float>::max();
+  for (int i = 0; i < 4; ++i) {
+    if (distances[i] > 0 && distances[i] < min_distance) {
+      min_distance = distances[i];
+    }
+  }
+
+  // If no valid intersection, return a large value
+  if (min_distance == std::numeric_limits<float>::max()) {
+    return 72.0f; // Default to max field distance
+  }
+
+  return min_distance;
 }
 
 // Update particle weights based on sensor measurements
 void measurementUpdate(float north_dist, float south_dist, float east_dist,
                        float west_dist) {
-  // Store previous readings (existing code)
-
-  // Increase this threshold to reduce sensitivity to small changes
-  const float DISTANCE_CHANGE_THRESHOLD =
-      0.25f; // Increased from 0.15 to 0.25 inches
-
-  // Skip update if readings haven't changed significantly
-  bool significant_change =
-      false; // {{ Initialize significant_change to false }}
-  if (north_dist >= 0 && prev_north_dist >= 0 &&
-      std::abs(north_dist - prev_north_dist) > DISTANCE_CHANGE_THRESHOLD)
-    significant_change = true; // {{ Check north sensor change }}
-  if (south_dist >= 0 && prev_south_dist >= 0 &&
-      std::abs(south_dist - prev_south_dist) > DISTANCE_CHANGE_THRESHOLD)
-    significant_change = true; // {{ Check south sensor change }}
-  if (east_dist >= 0 && prev_east_dist >= 0 &&
-      std::abs(east_dist - prev_east_dist) > DISTANCE_CHANGE_THRESHOLD)
-    significant_change = true; // {{ Check east sensor change }}
+  bool significant_change = false;
   if (west_dist >= 0 && prev_west_dist >= 0 &&
       std::abs(west_dist - prev_west_dist) > DISTANCE_CHANGE_THRESHOLD)
-    significant_change = true; // {{ Check west sensor change }}
-
-  if (!significant_change) { // {{ If no significant change, skip update }}
-    return;                  // Skip measurement update if no significant change
-  }
+    significant_change = true;
+  if (!significant_change)
+    return;
 
   float total_weight = 0.0f;
-
   for (auto &particle : particles) {
     float particle_weight = 1.0f;
     int valid_readings = 0;
 
-    // Modify sigma values to be less sensitive
     auto getSigma = [&](float predicted_distance) {
-      // Increase sigma values to be more tolerant of measurement noise
-      return (predicted_distance < 20.0f)
-                 ? 1.0f
-                 : 2.0f; // Example values in inches            // Increased
-                         // from 0.3/1.0 to 0.5/1.5
+      return 10.0f; // Wide sigma to account for FOV uncertainty
     };
 
-    // Process sensor readings (existing code with updated sigmas)
-    if (north_dist >= 0) {
-      float predicted_north_dist = predictSensorReading(particle.pose, 'N');
-      float north_diff = std::abs(predicted_north_dist - north_dist);
-      float sigma = getSigma(predicted_north_dist);
-      float north_likelihood =
-          std::exp(-(north_diff * north_diff) /
-                   (2.0f * sigma * sigma)); // Calculate likelihood
-      particle_weight *=
-          north_likelihood; // Multiply likelihood to particle weight
-      valid_readings++;
-    }
-    if (south_dist >= 0) {
-      float predicted_south_dist = predictSensorReading(particle.pose, 'S');
-      float south_diff = std::abs(predicted_south_dist - south_dist);
-      float sigma = getSigma(predicted_south_dist);
-      float south_likelihood =
-          std::exp(-(south_diff * south_diff) /
-                   (2.0f * sigma * sigma)); // Calculate likelihood
-      particle_weight *=
-          south_likelihood; // Multiply likelihood to particle weight
-      valid_readings++;
-    }
-    if (east_dist >= 0) {
-      float predicted_east_dist = predictSensorReading(particle.pose, 'E');
-      float east_diff = std::abs(predicted_east_dist - east_dist);
-      float sigma = getSigma(predicted_east_dist);
-      float east_likelihood =
-          std::exp(-(east_diff * east_diff) /
-                   (2.0f * sigma * sigma)); // Calculate likelihood
-      particle_weight *=
-          east_likelihood; // Multiply likelihood to particle weight
-      valid_readings++;
-    }
     if (west_dist >= 0) {
       float predicted_west_dist = predictSensorReading(particle.pose, 'W');
       float west_diff = std::abs(predicted_west_dist - west_dist);
       float sigma = getSigma(predicted_west_dist);
       float west_likelihood =
-          std::exp(-(west_diff * west_diff) /
-                   (2.0f * sigma * sigma)); // Calculate likelihood
-      particle_weight *=
-          west_likelihood; // Multiply likelihood to particle weight
+          std::exp(-(west_diff * west_diff) / (2.0f * sigma * sigma));
+      particle_weight *= west_likelihood;
       valid_readings++;
     }
 
-    // Apply a minimum weight floor to prevent particles from getting too low
-    // weight
     if (valid_readings > 0) {
-      // Apply minimum weight floor
-      particle.weight = std::max(
-          particle_weight,
-          MIN_WEIGHT *
-              UNIFORM_WEIGHT_FACTOR); // {{ Applied minimum weight floor }}
+      particle.weight = std::max(particle_weight, 0.1f);
     } else {
-      particle.weight = UNIFORM_WEIGHT_FACTOR;
+      particle.weight = 0.1f;
     }
-
     total_weight += particle.weight;
   }
 
-  // Normalize weights (existing code)
   if (total_weight > 0) {
     for (auto &particle : particles) {
       particle.weight /= total_weight;
     }
   }
 
-  // Update previous sensor readings for the next iteration
-  prev_north_dist =
-      north_dist; // Update prev_north_dist {{ Update prev_north_dist }}
-  prev_south_dist =
-      south_dist; // Update prev_south_dist {{ Update prev_south_dist }}
-  prev_east_dist =
-      east_dist; // Update prev_east_dist {{ Update prev_east_dist }}
-  prev_west_dist =
-      west_dist; // Update prev_west_dist {{ Update prev_west_dist }}
+  prev_west_dist = west_dist;
 }
 
 // Perform systematic resampling based on particle weights
