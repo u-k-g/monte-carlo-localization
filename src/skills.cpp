@@ -13,6 +13,35 @@
 #include <iostream>
 #include <random>
 
+bool antiHookJam() {
+
+  // Get current motor parameters
+  double current = hooks.get_current_draw();               // Current draw in mA
+  double velocity = std::abs(hooks.get_actual_velocity()); // Actual velocity
+  double target_velocity =
+      std::abs(hooks.get_target_velocity()); // Target velocity
+  double torque = hooks.get_torque();        // Motor torque in Nm
+
+  // Define threshold values for jam detection
+  const double CURRENT_THRESHOLD = 2500;       // mA (adjust based on testing)
+  const double VELOCITY_RATIO_THRESHOLD = 0.3; // Actual/target velocity ratio
+  const double TORQUE_THRESHOLD = 1.8;         // Nm (adjust based on testing)
+  const double MIN_TARGET_VELOCITY =
+      50; // Minimum velocity to consider for detection
+
+  // Detect jam conditions
+  bool highCurrent = (current > CURRENT_THRESHOLD);
+  bool lowVelocity = (velocity / target_velocity < VELOCITY_RATIO_THRESHOLD);
+  bool highTorque = (torque > TORQUE_THRESHOLD);
+
+  // Log values for debugging
+  std::cout << "Intake Motor Status: Current=" << current
+            << "mA, Velocity=" << velocity << ", Target=" << target_velocity
+            << ", Ratio=" << (velocity / target_velocity)
+            << ", Torque=" << torque << "Nm" << std::endl;
+  return ((highCurrent && lowVelocity) || highTorque);
+}
+
 void skills() {
   // Start the MCL background task
   // startMCL(chassis);
@@ -119,7 +148,9 @@ void skills1() {
   // Set pre-constants
   hooks.set_zero_position_all(0);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-  chassis.setPose(0, 0, 0);
+  chassis.setPose(0, ((dSouth.get_distance() / 25.4f) - 5.19),
+                  0); // front of robot is 6.5 in away from end of first tile
+  chassis.moveToPose(0, 0, 0, 1500, {.maxSpeed=40, .earlyExitRange=.1}, false);
 
   // Autonomous routine for the Skills challenge - 60 seconds MAX
   /* ############################################## */
@@ -155,14 +186,15 @@ void skills1() {
 
   // Set the hook to a high-torque rpm to get the best loading possible, waits
   // for the MoveToPose to end.
-  hooks.move_velocity(400);
   preroller.move_velocity(200);
 
   chassis.waitUntilDone();
+  hooks.brake();
   // Turn to a point ~1.5 tiles away from the right neutral stake
 
   lady_brown.move_absolute(72, 200); // optimal scoring when robot is 7.5" away
-                                     // from wall / when north sensor reads 17"
+  hooks.move_velocity(400);
+  // from wall / when north sensor reads 17"
 
   chassis.waitUntilDone();
 
@@ -171,10 +203,10 @@ void skills1() {
   pros::delay(2000);
   hooks.brake();
   hooks.move_relative(-10, 400);
-  chassis.turnToPoint(40, 64, 800, {.forwards = false});
+  chassis.turnToPoint(40, 65, 800, {.forwards = false});
 
   // Actually move there
-  chassis.moveToPoint(40, 64, 1500, {.forwards = false}, true);
+  chassis.moveToPoint(40, 65, 1500, {.forwards = false}, true);
   // Immediately hit against the lady brown to ensure appropriate fit.
   //  Wait until 20 inches passed to get to the point behind the lady brown -
   //  stop the hook here.
@@ -184,23 +216,71 @@ void skills1() {
   chassis.waitUntilDone();
 
   // Turn to the Neutral wall stake.
-  chassis.turnToPoint(78, 64, 600);
+  chassis.turnToPoint(78, 65, 600);
 
   // Move there
-  chassis.moveToPoint(54, 64, 900, {.forwards = true, .maxSpeed = 50}, true);
+  chassis.turnToPoint(69.7, 64.7, 500);
+  chassis.moveToPoint(56, 65, 900, {.forwards = true, .maxSpeed = 50}, false);
+  chassis.turnToPoint(69.7, 64.7, 500);
 
-  // At 18 inches of movement, stop the intake in advance of the neutral wall
-  // stake
+  chassis.moveToPose(58.9, 66, 90, 900, {.forwards = true, .maxSpeed = 50},
+                     true);
 
   chassis.waitUntilDone();
 
-  // Allow the robot to settle, then move the lady brown to score on the neutral
-  // stake.
+  // Turn to face the wall directly (90 degrees)
 
+  chassis.waitUntilDone();
 
+  // Check distance with north sensor and adjust position if needed
+  float wallDistance =
+      (float)(dNorth.get_distance()) / 25.4f; // Convert to inches
+  std::cout << "North sensor distance: " << wallDistance << " inches"
+            << std::endl;
 
-  lady_brown.move_absolute(500, 200); //this is the line im talking about
-  /*
+  // Only deploy lady_brown if distance is within ideal range
+  if (wallDistance >= 13.9f && wallDistance <= 15.2f) {
+    // We're in the ideal range, score normally
+    lady_brown.move_absolute(500, 200);
+    hooks.move_relative(-70, 400);
+
+  } else {
+    // We're out of position - calculate where we actually are
+    float idealDistance = 14.2f; // Middle of our desired range
+    float positionError =
+        wallDistance -
+        idealDistance; // Positive means too far, negative means too close
+
+    // Set new position based on sensor reading
+    float currentX = chassis.getPose().x;
+
+    // Update X position (since we're facing 90 degrees, X coordinate changes
+    // with distance)
+    float correctedX = 58.9f - positionError;
+
+    chassis.setPose(correctedX, chassis.getPose().y, chassis.getPose().theta);
+
+    // Now move to the correct position
+    if (positionError > 0) {
+      // Too far from wall, move forward
+      chassis.moveToPoint(58.9, chassis.getPose().y, 600,
+                          {.forwards = true, .maxSpeed = 30}, true);
+    } else {
+      // Too close to wall, back up
+      chassis.moveToPoint(58.9, chassis.getPose().y, 600,
+                          {.forwards = false, .maxSpeed = 30}, true);
+    }
+    chassis.waitUntilDone();
+
+    // Now score after correction
+    lady_brown.move_absolute(500, 200);
+    hooks.move_relative(-70, 400);
+  }
+
+  // Give the lady_brown time to deploy
+  pros::delay(200);
+
+  chassis.moveToPoint(55.5, chassis.getPose().y, 500);
 
   // Move back to the 5th tile edge, and restart the intake 15 inches into the
   // movement.
@@ -239,6 +319,10 @@ void skills1() {
   // all items onto the mogo.
   chassis.turnToHeading(
       -30, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE}, false);
+  
+    if (antiHookJam()) { // intake is jammed
+    hooks.move_relative(-500, 600);
+  }
   pros::delay(1000);
   // Let the last ring go when the hook gets stuck
   // Let the mogo go
@@ -248,6 +332,7 @@ void skills1() {
   hooks.brake();
   preroller.brake();
 
+  /*
   // Move back a little to ensure the mogo goes into the corner.
   chassis.moveToPoint(
       64.5, 5, 1000, {.forwards = false, .maxSpeed = 50, .earlyExitRange = 1.5},

@@ -44,8 +44,8 @@ lemlib::ControllerSettings
                      0,   // integral gain (kI) try 0.1
                      8,   // derivative gain (kD) 
                     3,   // anti windup
-                     1,   // small error range, in inches .5
-                     100, // small error range timeout, in milliseconds
+                     .25,   // small error range, in inches .5
+                     150, // small error range timeout, in milliseconds
                      3,   // large error range, in inches
                      500, // large error range timeout, in milliseconds
                      40   // maximum acceleration (slew)
@@ -57,7 +57,7 @@ lemlib::ControllerSettings
                       0,   // integral gain (kI) try 0.1
                       14,  // derivative gain (kD)
                       3,   // anti windup
-                      1,   // small error range, in degrees .5
+                      .5,   // small error range, in degrees .5
                       100, // small error range timeout, in milliseconds
                       3,   // large error range, in degrees
                       500, // large error range timeout, in milliseconds
