@@ -42,6 +42,22 @@ bool antiHookJam() {
   return ((highCurrent && lowVelocity) || highTorque);
 }
 
+void noHookJam(){
+  for (int i = 10; i < 45; i += 5) {
+    chassis.waitUntil(i);
+    // Checks every 5 inches for if the hook gets stuck.
+    while (hooks.get_actual_velocity() < 50) {
+      // FIX: The hook is lifted back and then hit into the target to ensure
+      // fit.
+      hooks.move_velocity(-600);
+      pros::delay(150);
+      hooks.move_velocity(400);
+      pros::delay(350);
+    }
+    // Lift up the Lady brown to load onto at 40 inches from the last position.
+  }
+}
+
 void skills() {
   // Start the MCL background task
   // startMCL(chassis);
@@ -419,9 +435,9 @@ void skills1() {
     while (hooks.get_actual_velocity() < 50) {
       // FIX: The hook is lifted back and then hit into the target to ensure
       // fit.
-      hooks.move_velocity(-200);
+      hooks.move_velocity(-600);
       pros::delay(150);
-      hooks.move_velocity(600);
+      hooks.move_velocity(400);
       pros::delay(350);
     }
     // Lift up the Lady brown to load onto at 40 inches from the last position.
