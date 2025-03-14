@@ -148,9 +148,12 @@ void skills1() {
   // Set pre-constants
   hooks.set_zero_position_all(0);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  /*
   chassis.setPose(0, ((dSouth.get_distance() / 25.4f) - 5.19),
                   0); // front of robot is 6.5 in away from end of first tile
   chassis.moveToPose(0, 0, 0, 1500, {.maxSpeed=40, .earlyExitRange=.1}, false);
+  */
+  chassis.setPose(0, 0, 0);
 
   // Autonomous routine for the Skills challenge - 60 seconds MAX
   /* ############################################## */
@@ -181,6 +184,9 @@ void skills1() {
   chassis.moveToPose(45, 92, 0, 2050,
                      {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = 1},
                      true);
+  if (antiHookJam()) { // intake is jammed
+    hooks.move_relative(-50, 600);
+  }
 
   chassis.waitUntil(50);
 
@@ -188,25 +194,28 @@ void skills1() {
   // for the MoveToPose to end.
   preroller.move_velocity(200);
 
-  chassis.waitUntilDone();
   hooks.brake();
+  chassis.waitUntilDone();
   // Turn to a point ~1.5 tiles away from the right neutral stake
 
   lady_brown.move_absolute(72, 200); // optimal scoring when robot is 7.5" away
-  hooks.move_velocity(400);
   // from wall / when north sensor reads 17"
+  hooks.move_velocity(400);
 
   chassis.waitUntilDone();
+  if (antiHookJam()) { // intake is jammed
+    hooks.move_relative(-50, 600);
+  }
 
   chassis.moveToPoint(45, 95, 700, {}, true);
 
-  pros::delay(2000);
+  pros::delay(1800);
   hooks.brake();
   hooks.move_relative(-10, 400);
   chassis.turnToPoint(40, 65, 800, {.forwards = false});
 
   // Actually move there
-  chassis.moveToPoint(40, 65, 1500, {.forwards = false}, true);
+  chassis.moveToPoint(35, 65, 1500, {.forwards = false}, true);
   // Immediately hit against the lady brown to ensure appropriate fit.
   //  Wait until 20 inches passed to get to the point behind the lady brown -
   //  stop the hook here.
@@ -216,27 +225,19 @@ void skills1() {
   chassis.waitUntilDone();
 
   // Turn to the Neutral wall stake.
-  chassis.turnToPoint(78, 65, 600);
+  chassis.turnToPoint(70, 64, 600);
 
   // Move there
-  chassis.turnToPoint(69.7, 64.7, 500);
-  chassis.moveToPoint(56, 65, 900, {.forwards = true, .maxSpeed = 50}, false);
-  chassis.turnToPoint(69.7, 64.7, 500);
+  chassis.moveToPoint(56, 64, 900, {.forwards = true, .maxSpeed = 50}, false);
+  chassis.turnToPoint(64, 64, 500);
 
-  chassis.moveToPose(58.9, 66, 90, 900, {.forwards = true, .maxSpeed = 50},
-                     true);
-
-  chassis.waitUntilDone();
-
-  // Turn to face the wall directly (90 degrees)
+  chassis.moveToPose(58, 64, 90, 900, {.forwards = true, .maxSpeed = 50}, true);
 
   chassis.waitUntilDone();
 
   // Check distance with north sensor and adjust position if needed
   float wallDistance =
       (float)(dNorth.get_distance()) / 25.4f; // Convert to inches
-  std::cout << "North sensor distance: " << wallDistance << " inches"
-            << std::endl;
 
   // Only deploy lady_brown if distance is within ideal range
   if (wallDistance >= 13.9f && wallDistance <= 15.2f) {
@@ -276,6 +277,9 @@ void skills1() {
     lady_brown.move_absolute(500, 200);
     hooks.move_relative(-70, 400);
   }
+  // Always deploy, even if correction failed
+  lady_brown.move_absolute(500, 200);
+  hooks.move_relative(-70, 400);
 
   // Give the lady_brown time to deploy
   pros::delay(200);
@@ -284,18 +288,18 @@ void skills1() {
 
   // Move back to the 5th tile edge, and restart the intake 15 inches into the
   // movement.
-  chassis.moveToPoint(72, 63, 2000);
+  chassis.moveToPoint(61, 64, 1000);
   hooks.move_velocity(600);
-  chassis.moveToPoint(47, 63, 750, {.forwards = false, .maxSpeed = 75});
+  chassis.moveToPoint(47, 64, 750, {.forwards = false, .maxSpeed = 75});
+  lady_brown.move_absolute(0, 200);
+
   chassis.waitUntil(5);
 
-  // Point the robot towards the home side wall, and put the lady brown down.
-  chassis.turnToPoint(47, 0, 950);
-  lady_brown.move_absolute(0, 200);
+  chassis.turnToPoint(47, -2, 950);
 
   // Go close to the wall, but exit early so that the robot glides to the last
   // ring.
-  chassis.moveToPoint(47, 0, 2500,
+  chassis.moveToPoint(47, -2, 2500,
                       {.forwards = true, .maxSpeed = 45, .earlyExitRange = 2});
 
   // Start the hook at a higher speed rpm
@@ -306,6 +310,11 @@ void skills1() {
   chassis.waitUntil(10);
 
   chassis.waitUntilDone();
+  if (antiHookJam()) { // intake is jammed
+    hooks.move_relative(-5000, 600);
+  }
+  hooks.move_velocity(600);
+
   // Wait for two seconds at the edge to ensure rings get put onto the mogo.
   pros::delay(1000);
 
@@ -317,51 +326,46 @@ void skills1() {
 
   // Turn away to position the mogo in the corner, waiting to let the hook put
   // all items onto the mogo.
+
   chassis.turnToHeading(
       -30, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE}, false);
-  
-    if (antiHookJam()) { // intake is jammed
-    hooks.move_relative(-500, 600);
-  }
+
+  hooks.move_relative(-500, 600);
+  hooks.move_velocity(600);
+
   pros::delay(1000);
   // Let the last ring go when the hook gets stuck
   // Let the mogo go
+  hooks.move_relative(-500, 600);
 
   clamp.retract();
 
   hooks.brake();
   preroller.brake();
 
-  /*
   // Move back a little to ensure the mogo goes into the corner.
   chassis.moveToPoint(
       64.5, 5, 1000, {.forwards = false, .maxSpeed = 50, .earlyExitRange = 1.5},
       false);
 
-  // Stop the intake and hook.
-  preroller.brake();
-  intake.brake();
-
-  // Move to the top edge of the first tile, preparing for alignment. Then
-  move
-      // back into the wall to use the distance sensor to reorient.
-      chassis.moveToPose(48, 20, -90, 1000,
-                         {.forwards = true, .horizontalDrift = 9}, true);
-  chassis.moveToPoint(67, 20, 1350, {.forwards = false}, false);
+  // Move to the top edge of the first tile, preparing for alignment. Then move
+  // back into the wall to use the distance sensor to reorient.
+  chassis.moveToPose(48, 20, -90, 1000,
+                     {.forwards = true, .horizontalDrift = 9}, true);
+  chassis.moveToPoint(70, 20, 1350, {.forwards = false}, false);
 
   // Get the distance to the wall using the distance sensor, convert to inches
   // and add the distance to tracking center (5in). Then, set the new position
-  // float new_x = (float)(72 - 8);
-  float new_x = (float)(72 - 8);
-  float new_y = ((float)(dSouth.get_distance()) / (float)10 / (float)2.54 +
-                 (float)6.5 - (float)8.75);
+  float new_y = 14.625f - ((dWest.get_distance() / 25.4f) - 15.8f);
+  float new_x = 62.3 - (dSouth.get_distance() / 25.4) + 4.25;
   std::cout << "Distance: " << new_x << std::endl;
   std::cout << "Distance: " << (float)(72) / (float)10 / (float)2.54
             << std::endl;
   std::cout << "Distance: " << dSouth.get_distance() << std::endl;
-  chassis.setPose(new_x, new_y, chassis.getPose().theta);
+  chassis.setPose(new_x, new_y, 0);
   chassis.moveToPoint(chassis.getPose().x - 5, chassis.getPose().y, 600,
                       {.earlyExitRange = 1});
+  /*
 
   chassis.moveToPose(24, 15, -90, 1000, {.horizontalDrift = 8});
 
