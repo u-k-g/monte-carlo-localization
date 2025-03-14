@@ -9,6 +9,17 @@
 #include <string>
 
 using namespace lemlib;
+
+void test360() {
+  chassis.setPose(0, 0, 0);
+  chassis.moveToPoint(0, -12, 1000, {.forwards=false});
+  chassis.turnToHeading(
+      360, 5000,
+      {.direction = lemlib::AngularDirection::CW_CLOCKWISE, .maxSpeed=100, .earlyExitRange=.00000000001});
+
+  chassis.moveToPoint(0, 2, 1000);
+}
+
 void hooks_score(int degrees, int direction) {
   hooks.move_relative(degrees, 600 * direction);
   hooks.brake();

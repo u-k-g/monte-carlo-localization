@@ -1,16 +1,15 @@
-bin/globals.cpp.o: src/globals.cpp include/main.h include/api.h \
- include/pros/adi.h include/pros/colors.h include/pros/device.h \
- include/pros/distance.h include/pros/error.h include/pros/ext_adi.h \
- include/pros/adi.h include/pros/adi.h include/pros/gps.h \
- include/pros/imu.h include/pros/link.h include/pros/llemu.h \
- include/liblvgl/llemu.h include/liblvgl/lvgl.h \
- include/liblvgl/misc/lv_log.h include/liblvgl/lv_conf_internal.h \
- include/liblvgl/lv_conf_kconfig.h include/liblvgl/lv_conf.h \
- include/liblvgl/misc/lv_types.h include/liblvgl/misc/lv_timer.h \
- include/liblvgl/hal/lv_hal_tick.h include/liblvgl/misc/lv_math.h \
- include/liblvgl/misc/lv_mem.h include/liblvgl/misc/lv_async.h \
- include/liblvgl/misc/lv_anim_timeline.h include/liblvgl/misc/lv_anim.h \
- include/liblvgl/misc/lv_printf.h \
+bin/globals.cpp.o: src/globals.cpp include/api.h include/pros/adi.h \
+ include/pros/colors.h include/pros/device.h include/pros/distance.h \
+ include/pros/error.h include/pros/ext_adi.h include/pros/adi.h \
+ include/pros/adi.h include/pros/gps.h include/pros/imu.h \
+ include/pros/link.h include/pros/llemu.h include/liblvgl/llemu.h \
+ include/liblvgl/lvgl.h include/liblvgl/misc/lv_log.h \
+ include/liblvgl/lv_conf_internal.h include/liblvgl/lv_conf_kconfig.h \
+ include/liblvgl/lv_conf.h include/liblvgl/misc/lv_types.h \
+ include/liblvgl/misc/lv_timer.h include/liblvgl/hal/lv_hal_tick.h \
+ include/liblvgl/misc/lv_math.h include/liblvgl/misc/lv_mem.h \
+ include/liblvgl/misc/lv_async.h include/liblvgl/misc/lv_anim_timeline.h \
+ include/liblvgl/misc/lv_anim.h include/liblvgl/misc/lv_printf.h \
  include/liblvgl/misc/../lv_conf_internal.h include/liblvgl/hal/lv_hal.h \
  include/liblvgl/hal/lv_hal_disp.h include/liblvgl/hal/lv_hal.h \
  include/liblvgl/draw/lv_draw.h include/liblvgl/misc/lv_style.h \
@@ -129,8 +128,8 @@ bin/globals.cpp.o: src/globals.cpp include/main.h include/api.h \
  include/pros/motors.hpp include/pros/optical.hpp include/pros/optical.h \
  include/pros/rotation.hpp include/pros/rotation.h include/pros/rtos.hpp \
  include/pros/screen.hpp include/pros/screen.h include/pros/vision.hpp \
- include/pros/vision.h include/globals.h include/lemlib/api.hpp \
- include/lemlib/pid.hpp include/lemlib/pose.hpp include/lemlib/util.hpp \
+ include/pros/vision.h include/lemlib/api.hpp include/lemlib/pid.hpp \
+ include/lemlib/pose.hpp include/lemlib/util.hpp \
  include/lemlib/chassis/chassis.hpp include/pros/imu.hpp \
  include/lemlib/asset.hpp include/lemlib/chassis/trackingWheel.hpp \
  include/pros/motor_group.hpp include/pros/adi.hpp \
@@ -140,13 +139,12 @@ bin/globals.cpp.o: src/globals.cpp include/main.h include/api.h \
  include/fmt/format-inl.h include/lemlib/logger/baseSink.hpp \
  include/fmt/args.h include/lemlib/logger/message.hpp \
  include/lemlib/logger/infoSink.hpp \
- include/lemlib/logger/telemetrySink.hpp include/pros/apix.h \
- include/api.h include/pros/device.h include/pros/serial.h \
- include/pros/serial.hpp include/robot/auton.h include/robodash/api.h \
- include/robodash/core.h include/robodash/views/console.hpp \
- include/robodash/views/image.hpp include/robodash/views/selector.hpp \
- include/pros/distance.hpp
-include/main.h:
+ include/lemlib/logger/telemetrySink.hpp include/main.h include/api.h \
+ include/globals.h include/pros/apix.h include/pros/device.h \
+ include/pros/serial.h include/pros/serial.hpp include/robot/auton.h \
+ include/robodash/api.h include/robodash/core.h \
+ include/robodash/views/console.hpp include/robodash/views/image.hpp \
+ include/robodash/views/selector.hpp include/pros/distance.hpp
 include/api.h:
 include/pros/adi.h:
 include/pros/colors.h:
@@ -360,7 +358,6 @@ include/pros/screen.hpp:
 include/pros/screen.h:
 include/pros/vision.hpp:
 include/pros/vision.h:
-include/globals.h:
 include/lemlib/api.hpp:
 include/lemlib/pid.hpp:
 include/lemlib/pose.hpp:
@@ -384,8 +381,10 @@ include/fmt/args.h:
 include/lemlib/logger/message.hpp:
 include/lemlib/logger/infoSink.hpp:
 include/lemlib/logger/telemetrySink.hpp:
-include/pros/apix.h:
+include/main.h:
 include/api.h:
+include/globals.h:
+include/pros/apix.h:
 include/pros/device.h:
 include/pros/serial.h:
 include/pros/serial.hpp:

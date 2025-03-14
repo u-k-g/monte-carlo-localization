@@ -42,11 +42,11 @@ bool antiHookJam() {
   return ((highCurrent && lowVelocity) || highTorque);
 }
 
-void noHookJam(){
+void noHookJam() {
   for (int i = 10; i < 45; i += 5) {
     chassis.waitUntil(i);
     // Checks every 5 inches for if the hook gets stuck.
-    while (hooks.get_actual_velocity() < 50) {
+    while (hooks.get_target_velocity() - hooks.get_actual_velocity() > 300) {
       // FIX: The hook is lifted back and then hit into the target to ensure
       // fit.
       hooks.move_velocity(-600);
@@ -161,6 +161,24 @@ void skills() {
 }
 
 void skills1() {
+
+  pros::Task antiJamHooks([&]() {
+    while (true) {
+      int targetVel = hooks.get_target_velocity();
+
+      while (hooks.get_target_velocity() - hooks.get_actual_velocity() > 500 && (hooks.get_torque() > 0.6f || hooks.get_power() > 9)) {
+
+        hooks.move_velocity(-600);
+        pros::delay(150);
+        hooks.move_velocity(400);
+        pros::delay(350);
+        hooks.move_velocity(targetVel);
+      }
+
+      pros::delay(50);
+    }
+  });
+
   // Set pre-constants
   hooks.set_zero_position_all(0);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -197,7 +215,7 @@ void skills1() {
 
   // Immediately move to the farthest ring. A couple of other things happen
   // while this is going on
-  chassis.moveToPose(45, 92, 0, 2050,
+  chassis.moveToPose(45, 94, 0, 2050,
                      {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = 1},
                      true);
   if (antiHookJam()) { // intake is jammed
@@ -306,17 +324,17 @@ void skills1() {
   // movement.
   chassis.moveToPoint(61, 64, 1000);
   hooks.move_velocity(600);
-  chassis.moveToPoint(47, 64, 750, {.forwards = false, .maxSpeed = 75});
+  chassis.moveToPoint(49, 64, 750, {.forwards = false, .maxSpeed = 75});
   lady_brown.move_absolute(0, 200);
 
   chassis.waitUntil(5);
 
-  chassis.turnToPoint(47, -2, 950);
+  chassis.turnToPoint(49, -2, 950);
 
   // Go close to the wall, but exit early so that the robot glides to the last
   // ring.
-  chassis.moveToPoint(47, -2, 2500,
-                      {.forwards = true, .maxSpeed = 45, .earlyExitRange = 2});
+  chassis.moveToPoint(49, -3, 2500,
+                      {.forwards = true, .maxSpeed = 45, .earlyExitRange = 1});
 
   // Start the hook at a higher speed rpm
   preroller.move_velocity(200);
@@ -336,8 +354,8 @@ void skills1() {
 
   // Turn, then Move to the point where the last ring was nudged to collect it
   // for top ring
-  chassis.turnToPoint(61, 17, 1000);
-  chassis.moveToPoint(63, 17, 1000,
+  chassis.turnToPoint(61, 19, 1000);
+  chassis.moveToPoint(61, 19, 1000,
                       {.forwards = true, .maxSpeed = 50, .earlyExitRange = 4});
 
   // Turn away to position the mogo in the corner, waiting to let the hook put
@@ -352,25 +370,33 @@ void skills1() {
   pros::delay(1000);
   // Let the last ring go when the hook gets stuck
   // Let the mogo go
-  hooks.move_relative(-500, 600);
+  hooks.move_velocity(-600);
 
   clamp.retract();
 
-  hooks.brake();
   preroller.brake();
 
   // Move back a little to ensure the mogo goes into the corner.
-  chassis.moveToPoint(
-      64.5, 5, 1000, {.forwards = false, .maxSpeed = 50, .earlyExitRange = 1.5},
-      false);
+  chassis.moveToPoint(62, 5, 1000,
+                      {.forwards = false, .maxSpeed = 30, .earlyExitRange = 2},
+                      false);
+  chassis.waitUntil(1);
+  hooks.brake();
+  chassis.waitUntilDone();
 
   // Move to the top edge of the first tile, preparing for alignment. Then move
   // back into the wall to use the distance sensor to reorient. 0 theta and fix
   // the x
-  chassis.moveToPose(48, 20, -90, 1000,
-                     {.forwards = true, .horizontalDrift = 9}, true);
-  chassis.moveToPoint(70, 20, 1350, {.forwards = false}, false);
+  chassis.moveToPose(46, 28, 90, 1000,
+                     {.horizontalDrift = 9}, true);
 
+  chassis.turnToHeading(90, 1000, {.earlyExitRange=0.1});
+  chassis.moveToPose(60, 28, 90, 1350, {.earlyExitRange = .1},
+                     false);
+
+  chassis.moveToPose(74, 28, 90, 1350, {}, false);
+
+  /*
   chassis.waitUntilDone();
 
   // Get the distance to the wall using the distance sensor, convert to inches
@@ -414,7 +440,6 @@ void skills1() {
   clamp.extend();
   pros::delay(250);
 
-  /*
 
   // Turn to the above ring - Start intake and hook, and move there
   chassis.turnToPoint(-24, 38.75, 850, {}, false);

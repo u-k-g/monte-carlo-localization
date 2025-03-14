@@ -117,7 +117,7 @@ void autonomous() { skills1(); }
  */
 void opcontrol() {
   // autonomous();
-
+  test360();
   stopMCL();
   // startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
@@ -152,7 +152,7 @@ void opcontrol() {
       while (hooks.get_actual_velocity() < 50) {
         // FIX: The hook is lifted back and then hit into the target to ensure
         // fit.
-        hooks.move_relative(-600, 600);
+        hooks.move_relative(-600, -600);
         hooks.move_relative(600, 400);
       }
       preroller.move_velocity(200);
