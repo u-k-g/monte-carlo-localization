@@ -349,25 +349,43 @@ void skills1() {
       false);
 
   // Move to the top edge of the first tile, preparing for alignment. Then move
-  // back into the wall to use the distance sensor to reorient.
+  // back into the wall to use the distance sensor to reorient. 0 theta and fix the x
   chassis.moveToPose(48, 20, -90, 1000,
                      {.forwards = true, .horizontalDrift = 9}, true);
   chassis.moveToPoint(70, 20, 1350, {.forwards = false}, false);
 
+  chassis.waitUntilDone();
+
   // Get the distance to the wall using the distance sensor, convert to inches
   // and add the distance to tracking center (5in). Then, set the new position
-  float new_y = 14.625f - ((dWest.get_distance() / 25.4f) - 15.8f);
+  // Step 1: Reset X position and theta using south sensor
   float new_x = 62.3 - (dSouth.get_distance() / 25.4) + 4.25;
-  std::cout << "Distance: " << new_x << std::endl;
-  std::cout << "Distance: " << (float)(72) / (float)10 / (float)2.54
+  std::cout << "South distance: " << dSouth.get_distance() / 25.4 << " inches"
             << std::endl;
-  std::cout << "Distance: " << dSouth.get_distance() << std::endl;
-  chassis.setPose(new_x, new_y, 0);
+  std::cout << "Setting X pose to: " << new_x << std::endl;
+
+  // Reset X and theta, keep current Y
+  chassis.setPose(new_x, chassis.getPose().y, 0);
+
+  // Move forward to clear the mobile goal
+  chassis.moveToPoint(chassis.getPose().x - 24, chassis.getPose().y, 800,
+                      {}, false);
+  chassis.waitUntilDone();
+
+  // Step 2: Now reset Y position using west sensor
+  float new_y = 14.625f - ((dWest.get_distance() / 25.4f) - 15.8f);
+  std::cout << "West distance: " << dWest.get_distance() / 25.4 << " inches"
+            << std::endl;
+  std::cout << "Setting Y pose to: " << new_y << std::endl;
+
+  // Reset Y, keep current X and theta
+  chassis.setPose(chassis.getPose().x, new_y, chassis.getPose().theta);
+
+  // Continue with movement
   chassis.moveToPoint(chassis.getPose().x - 5, chassis.getPose().y, 600,
                       {.earlyExitRange = 1});
-  /*
 
-  chassis.moveToPose(24, 15, -90, 1000, {.horizontalDrift = 8});
+  chassis.moveToPose(24, 15, 90, 1000, {.horizontalDrift = 8});
 
   chassis.turnToHeading(90, 1000, {});
   chassis.moveToPoint(-16.5, 15, 1000, {.forwards = false, .maxSpeed = 80},
@@ -379,6 +397,7 @@ void skills1() {
   clamp.extend();
   pros::delay(250);
 
+  /*
   // Turn to the above ring - Start intake and hook, and move there
   chassis.turnToPoint(-24, 38.75, 850, {}, false);
   preroller.move_velocity(600);
