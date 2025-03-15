@@ -11,7 +11,8 @@
 
 using namespace lemlib;
 
-void redNeg() { //currently grabs goal from flat side, starts at an angle, scores preload
+void redNeg() { // currently grabs goal from flat side, starts at an angle,
+                // scores preload
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
   // Move to first stake, then a bit farther at a slower speed for alignment
@@ -30,91 +31,98 @@ void redNeg() { //currently grabs goal from flat side, starts at an angle, score
 
 void redPos() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-  chassis.setPose(0, 0, 0);
+  chassis.setPose(0, 0, 0); // preroller forward
 
   // Move to first stake
-  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false}); //goal from corner
+  chassis.moveToPose(-15.3, -0.2, 0, 2000,
+                     {.forwards = true}); // goal from flat
   chassis.waitUntilDone();
+
+  hooks.move_absolute(600, 600);
+  pros::delay(300);
+
+  chassis.moveToPose(-2.2, 30.2, 230, 1200,
+                     {.forwards = false}); // goal from flat
+
   // Grab the closest goal
   clamp.toggle();
   pros::delay(250);
 
   // Rotate toward blue ring
-  chassis.turnToPoint(-25, -27, 1000);
+  chassis.turnToPoint(-33.8, -38.3, 1000);
   chassis.waitUntilDone();
-
   // Load the ring onto the stake
   preroller.move_velocity(200);
   hooks.move_velocity(600);
+  chassis.moveToPoint(33.8, -38.3, 1000);
 
-  // Moves to 2 ring stack
-
-  chassis.moveToPoint(-35, 7, 1500);
-  chassis.waitUntilDone();
+  pros::delay(5000);
   preroller.brake();
   hooks.brake();
-
-  chassis.moveToPose(-25, -4, 170, 2000, {.horizontalDrift = 2});
-  chassis.moveToPoint(-32, 10, 1000, {.forwards = false});
-  chassis.waitUntilDone();
-  clamp.toggle();
-
-  chassis.turnToPoint(14, -36, 800);
-  lady_brown.move_absolute(72, 200);
-
-  chassis.moveToPoint(14, -36, 5000);
 }
 
-void bluePos() { //corner side of goal
+void bluePos() { // corner side of goal, flat against wall
 
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
 
   // Move to first stake
-  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false});
-  chassis.waitUntilDone();
-  // Grab the closest MOGO mech
+  chassis.moveToPose(0, -31, 0, 2000, {.forwards = false});
+  chassis.waitUntil(30.5);
   clamp.toggle();
   pros::delay(250);
 
+  hooks.move_velocity(600);
   // Rotate toward blue ring
-  chassis.turnToPoint(25, -27, 1000);
+  chassis.turnToPoint(24.5, -39, 1000);
   chassis.waitUntilDone();
 
   // Load the ring onto the stake
   preroller.move_velocity(200);
-  hooks.move_velocity(600);
 
-  chassis.moveToPoint(35, 7, 1500);
+  chassis.moveToPoint(24.5, -39, 1500);
+
   chassis.waitUntilDone();
+  pros::delay(1000);
   preroller.move_velocity(0);
   hooks.move_velocity(0);
-
-  chassis.moveToPose(25, -4, 170, 2000, {.horizontalDrift = 2});
-  chassis.moveToPoint(32, 10, 1000, {.forwards = false});
-  chassis.waitUntilDone();
   clamp.toggle();
 
-  chassis.turnToPoint(-14, -36, 800);
-  lady_brown.move_absolute(72, 200);
-  chassis.moveToPoint(-14, -36, 5000);
+  chassis.moveToPose(24, -41, 180, 2000, {.forwards = false});
 }
 
 void blueNeg() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
   // Move to first stake, then a bit farther at a slower speed for alignment
-  chassis.moveToPoint(0, -27, 1800, {.forwards = false, .maxSpeed = 60}, true);
-  chassis.moveToPoint(0, -35, 2050, {.forwards = false, .maxSpeed = 30}, true);
+  chassis.moveToPoint(0, -31, 1800, {.forwards = false, .maxSpeed = 80}, true);
+  chassis.moveToPoint(0, -36, 2050, {.forwards = false, .maxSpeed = 40}, true);
   chassis.waitUntilDone();
-  pros::delay(500);
-  // Grab the closest MOGO mech
+  // Grab the closest MOGO
   clamp.extend();
-  pros::delay(2000);
+  pros::delay(500);
   // Load the ring onto the stake
   preroller.move_velocity(200);
   hooks.move_velocity(600);
+
+  chassis.turnToPoint(-26, -40, 1000);
+  chassis.moveToPoint(-26, -40, 1000);
+  chassis.moveToPoint(-29, -41, 1000);
+
+  chassis.waitUntilDone();
+  pros::delay(250);
+
+  chassis.moveToPose(-29, -40, 180, 1200);
+  chassis.waitUntilDone();
+  pros::delay(250);
+  chassis.moveToPose(-29, -40, 180, 1200);
+  chassis.waitUntilDone();
+  chassis.moveToPose(-20, -40, 180, 1200);
+  chassis.waitUntilDone();
+
   pros::delay(3000);
+  preroller.brake();
+  hooks.brake();
 }
 
 void test360() {

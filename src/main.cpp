@@ -10,6 +10,7 @@
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
+#include "robodash/core.h"
 #include "robot/auton.h"
 #include "robot/monte.hpp"
 #include "robot/skills.h"
@@ -31,15 +32,7 @@ rd::Console console;
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() {
-  static bool pressed = false;
-  pressed = !pressed;
-  if (pressed) {
-    pros::lcd::set_text(2, "I was pressed!");
-  } else {
-    pros::lcd::clear_line(2);
-  }
-}
+
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -53,14 +46,14 @@ void initialize() {
   chassis.calibrate(); // calibrate sensors
   chassis.setPose(0, 0, 0);
   lady_brown.set_zero_position_all(0);
-  rd_view_t *view = rd_view_create("my view");
   selector.on_select([](std::optional<rd::Selector::routine_t> routine) {
-    if (routine == std::nullopt) {
-      std::cout << "No routine selected" << std::endl;
-    } else {
-      std::cout << "Selected Routine: " << routine.value().name << std::endl;
-    }
-  });
+		if (routine == std::nullopt) {
+			std::cout << "No routine selected" << std::endl;
+		} else {
+			std::cout << "Selected Routine: " << routine.value().name << std::endl;
+		}
+	});
+  // /*
   pros::Task screenTask([&]() {
     while (true) {
 
@@ -83,6 +76,7 @@ void initialize() {
       pros::delay(50);
     }
   });
+  // */
 }
 
 /**
@@ -119,8 +113,8 @@ void competition_initialize() { selector.focus(); }
  */
 
 void autonomous() {
+  bluePos();
   selector.run_auton();
-  // skills1();
 }
 
 // Create MCL instance using the existing distance sensors
@@ -191,7 +185,7 @@ void opcontrol() {
         break;
 
       case PRIMED:
-        lady_brown.move_absolute(480, 200); // Maintain primed position
+        lady_brown.move_absolute(425, 200); // Maintain primed position
         hooks.move_relative(-200, -600);
         pros::delay(100);
         ladyBrownState = SCORED; // optimal scoring when robot is x" away from
@@ -204,6 +198,6 @@ void opcontrol() {
         break;
       }
     }
-    pros::delay(15);
+    pros::delay(20);
   }
 }
