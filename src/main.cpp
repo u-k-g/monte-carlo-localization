@@ -113,7 +113,9 @@ void competition_initialize() { selector.focus(); }
  */
 
 void autonomous() {
-  bluePos();
+  // redNeg();
+  // skills1();
+  Auton3();
   selector.run_auton();
 }
 
@@ -186,8 +188,8 @@ void opcontrol() {
 
       case PRIMED:
         lady_brown.move_absolute(425, 200); // Maintain primed position
-        hooks.move_relative(-200, -600);
-        pros::delay(100);
+        hooks.move_relative(-120, -600);
+        pros::delay(60);
         ladyBrownState = SCORED; // optimal scoring when robot is x" away from
                                  // wall / when north sensor reads 17" or 14"
         break;

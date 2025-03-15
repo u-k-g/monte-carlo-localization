@@ -14,18 +14,24 @@ using namespace lemlib;
 void redNeg() { // currently grabs goal from flat side, starts at an angle,
                 // scores preload
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-  chassis.setPose(0, 0, 0); //6in from tile end
+  chassis.setPose(0, 0, 0); // 6in from tile end
   // Move to first stake, then a bit farther at a slower speed for alignment
-  chassis.moveToPoint(0, -27, 1800, {.forwards = false, .maxSpeed = 60}, true);
-  chassis.moveToPoint(0, -35, 2050, {.forwards = false, .maxSpeed = 30}, true);
+  chassis.moveToPoint(0, -32.5, 1800, {.forwards = false, .maxSpeed = 60},
+                      true);
   chassis.waitUntilDone();
-  pros::delay(500);
   // Grab the closest MOGO mech
   clamp.extend();
   pros::delay(1500);
   // Load the ring onto the stake
   preroller.move_velocity(200);
   hooks.move_velocity(600);
+
+  chassis.turnToPoint(25.6, -24.5, 1000, {.forwards = true});
+  chassis.moveToPoint(25.6, -24.5, 1000, {.forwards = true});
+  chassis.waitUntilDone();
+  pros::delay(1000);
+  chassis.moveToPose(27.6, -60, 0, 1000, {.forwards = true});
+
   pros::delay(3000);
 }
 

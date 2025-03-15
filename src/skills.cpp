@@ -164,8 +164,7 @@ void skills1() {
   pros::Task antiJamHooks([&]() {
     while (true) {
       int targetVel = hooks.get_target_velocity();
-      // (hooks.get_target_velocity() - hooks.get_actual_velocity() > 500 && (hooks.get_torque() > 0.6f || hooks.get_power() > 9))
-      while (hooks.get_torque() > 0.34) {
+      while (hooks.get_target_velocity() - hooks.get_actual_velocity() > hooks.get_target_velocity()*.4 && (hooks.get_torque() > 0.55f || hooks.get_power() > 9)){
 
         hooks.move_velocity(-600);
         pros::delay(400);
