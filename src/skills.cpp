@@ -14,7 +14,6 @@
 #include <random>
 
 bool antiHookJam() {
-
   // Get current motor parameters
   double current = hooks.get_current_draw();               // Current draw in mA
   double velocity = std::abs(hooks.get_actual_velocity()); // Actual velocity
@@ -165,13 +164,13 @@ void skills1() {
   pros::Task antiJamHooks([&]() {
     while (true) {
       int targetVel = hooks.get_target_velocity();
-
-      while (hooks.get_target_velocity() - hooks.get_actual_velocity() > 500 && (hooks.get_torque() > 0.6f || hooks.get_power() > 9)) {
+      // (hooks.get_target_velocity() - hooks.get_actual_velocity() > 500 && (hooks.get_torque() > 0.6f || hooks.get_power() > 9))
+      while (hooks.get_torque() > 0.34) {
 
         hooks.move_velocity(-600);
-        pros::delay(150);
+        pros::delay(400);
         hooks.move_velocity(400);
-        pros::delay(350);
+        pros::delay(200);
         hooks.move_velocity(targetVel);
       }
 
@@ -198,8 +197,8 @@ void skills1() {
 
   // Move to the center, then turn to and touch the right side Mogo.
   chassis.moveToPoint(0, 15.5, 800);
-  chassis.turnToPoint(19, 15.5, 650, {.forwards = false});
-  chassis.moveToPoint(16.5, 15.5, 850, {.forwards = false, .earlyExitRange = 2},
+  chassis.turnToPoint(19, 15.5, 800, {.forwards = false,.maxSpeed=60});
+  chassis.moveToPoint(16.5, 15.5, 850, {.forwards = false, .maxSpeed=60, .earlyExitRange = 2},
                       false);
   chassis.moveToPoint(20, 15.5, 550, {.forwards = false, .maxSpeed = 63}, true);
 
@@ -261,7 +260,7 @@ void skills1() {
   chassis.waitUntilDone();
 
   // Turn to the Neutral wall stake.
-  chassis.turnToPoint(70, 64, 600);
+  chassis.turnToPoint(70, 64, 600,{.maxSpeed=60});
 
   // Move there
   chassis.moveToPoint(56, 64, 900, {.forwards = true, .maxSpeed = 50}, false);
@@ -385,16 +384,16 @@ void skills1() {
   chassis.waitUntil(1);
   hooks.brake();
   chassis.waitUntilDone();
-
   // Move to the top edge of the first tile, preparing for alignment. Then move
   // back into the wall to use the distance sensor to reorient. 0 theta and fix
   // the x
+  /** 
   chassis.moveToPose(46, 28, 90, 1000,
                      {.horizontalDrift = 9}, true);
 
   chassis.turnToHeading(90, 1000, {.earlyExitRange=0.1});
 
-  chassis.moveToPose(65, 28, 90, 1350, {.minSpeed=80, .earlyExitRange=1}, false);
+  chassis.moveToPose(70, 28, 90, 1350, {.minSpeed=80, .earlyExitRange=1}, false);
 
   chassis.waitUntilDone();
 
@@ -402,38 +401,32 @@ void skills1() {
   // and add the distance to tracking center (5in). Then, set the new position
   // Step 1: Reset X position and theta using south sensor
   float new_x = 62.3 - (dNorthW.get_distance() / 25.4) + 4.25;
-  std::cout << "South distance: " << dNorthW.get_distance() / 25.4 << " inches"
-            << std::endl;
-  std::cout << "Setting X pose to: " << new_x << std::endl;
-
+  float old_x = chassis.getPose().x;
+  pros::lcd::print(4,"X Position changed from %.2f to %.2f", (old_x,new_x));
+  pros::delay(2000);
   // Reset X and theta, keep current Y
   chassis.setPose(new_x, chassis.getPose().y, 0);
-
   // Move forward to clear the mobile goal
-  chassis.moveToPoint(chassis.getPose().x - 24, chassis.getPose().y, 800, {},
+  chassis.moveToPoint(chassis.getPose().x - 24, chassis.getPose().y, 2000, {.maxSpeed=50},
                       false);
   chassis.waitUntilDone();
-
   // Step 2: Now reset Y position using west sensor
   float new_y = 14.625f - ((dWest.get_distance() / 25.4f) - 15.8f);
-  std::cout << "West distance: " << dWest.get_distance() / 25.4 << " inches"
-            << std::endl;
-  std::cout << "Setting Y pose to: " << new_y << std::endl;
-
+  float old_y = chassis.getPose().y;
+  pros::lcd::print(5,"Y Position changed from %.2f to %.2f", (old_y,new_y));
+  pros::lcd::print(6, "Fixed X and Y positions");
   // Reset Y, keep current X and theta
   chassis.setPose(chassis.getPose().x, new_y, chassis.getPose().theta);
-
-  /*
-  // Continue with movement
+  // Continue with movement */
   chassis.moveToPoint(chassis.getPose().x - 5, chassis.getPose().y, 600,
                       {.earlyExitRange = 1});
 
   chassis.moveToPose(24, 15, 90, 1000, {.horizontalDrift = 8});
 
   chassis.turnToHeading(90, 1000, {});
-  chassis.moveToPoint(-16.5, 15, 1000, {.forwards = false, .maxSpeed = 80},
+  chassis.moveToPoint(-16.5, 24, 1000, {.forwards = false, .maxSpeed = 80},
                       false);
-  chassis.moveToPoint(-20.5, 15, 700, {.forwards = false, .maxSpeed = 55},
+  chassis.moveToPoint(-26, 24, 700, {.forwards = false, .maxSpeed = 55},
                       false);
 
   // Latch the mogo - delays just in case
@@ -443,8 +436,8 @@ void skills1() {
 
   // Turn to the above ring - Start intake and hook, and move there
   chassis.turnToPoint(-24, 38.75, 850, {}, false);
-  preroller.move_velocity(600);
-  hooks.move_velocity(200);
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
   chassis.moveToPoint(-24, 38.75, 1000);
 
   // Immediately move to the farthest ring. A couple of other things happen
@@ -576,5 +569,4 @@ void skills1() {
   // back into the wall to use the distance sensor to reorient.
   chassis.moveToPose(-48, 20, -90, 2050, {.forwards = true, .maxSpeed = 80},
                      true);
-*/
 }
