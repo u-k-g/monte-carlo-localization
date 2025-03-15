@@ -92,7 +92,7 @@ void initialize() {
  */
 void disabled() {
   // unclamp
-  clamp.retract();
+  // clamp.retract();
 }
 
 /**
@@ -119,6 +119,7 @@ void competition_initialize() { selector.focus(); }
  */
 
 void autonomous() {
+  selector.run_auton();
   // skills1();
 }
 
