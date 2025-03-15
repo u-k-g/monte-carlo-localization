@@ -10,11 +10,20 @@
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
+#include "robot/auton.h"
 #include "robot/monte.hpp"
 #include "robot/skills.h"
 #include <iostream>
 
 using namespace lemlib;
+
+rd::Selector selector({{"redNeg", &redNeg},
+                       {"redPos", &redPos},
+                       {"blueNeg", &blueNeg},
+                       {"bluePos", &bluePos},
+                       {"skills", &skills1}});
+
+rd::Console console;
 
 /**
  * A callback function for LLEMU's center button.
@@ -40,11 +49,21 @@ void on_center_button() {
  */
 void initialize() {
   pros::lcd::initialize(); // initialize brain screen
-  chassis.calibrate();     // calibrate sensors
+  selector.focus();
+  chassis.calibrate(); // calibrate sensors
   chassis.setPose(0, 0, 0);
   lady_brown.set_zero_position_all(0);
+  rd_view_t *view = rd_view_create("my view");
+  selector.on_select([](std::optional<rd::Selector::routine_t> routine) {
+    if (routine == std::nullopt) {
+      std::cout << "No routine selected" << std::endl;
+    } else {
+      std::cout << "Selected Routine: " << routine.value().name << std::endl;
+    }
+  });
   pros::Task screenTask([&]() {
     while (true) {
+
       // print robot location to the brain screen
       pros::lcd::print(0, "X: %f", chassis.getPose().x);         // x
       pros::lcd::print(1, "Y: %f", chassis.getPose().y);         // y
@@ -85,7 +104,7 @@ void disabled() {
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() { selector.focus(); }
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -101,7 +120,6 @@ void competition_initialize() {}
 
 void autonomous() {
   // skills1();
-  test360();
 }
 
 // Create MCL instance using the existing distance sensors
