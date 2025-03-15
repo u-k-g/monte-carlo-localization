@@ -5,53 +5,165 @@
 #include "pros/rtos.hpp"
 #include "robot/auton.h"
 
+#include <cmath>
 #include <iostream>
 #include <string>
-#include <cmath>
 
 using namespace lemlib;
 
+void redNeg() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0, 0, 0);
+  // Move to first stake, then a bit farther at a slower speed for alignment
+  chassis.moveToPoint(0, -27, 1800, {.forwards = false, .maxSpeed = 60}, true);
+  chassis.moveToPoint(0, -35, 2050, {.forwards = false, .maxSpeed = 30}, true);
+  chassis.waitUntilDone();
+  pros::delay(500);
+  // Grab the closest MOGO mech
+  clamp.extend();
+  pros::delay(1500);
+  // Load the ring onto the stake
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
+  pros::delay(3000);
+}
+
+void redPos() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0, 0, 0);
+
+  // Move to first stake
+  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false});
+  chassis.waitUntilDone();
+  // Grab the closest MOGO mech
+  clamp.toggle();
+  pros::delay(250);
+
+  // Rotate toward blue ring
+  chassis.turnToPoint(-25, -27, 1000);
+  chassis.waitUntilDone();
+
+  // Load the ring onto the stake
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
+
+  // Moves to 2 ring stack
+
+  chassis.moveToPoint(-35, 7, 1500);
+  chassis.waitUntilDone();
+  preroller.brake();
+  hooks.brake();
+
+  chassis.moveToPose(-25, -4, 170, 2000, {.horizontalDrift = 2});
+  chassis.moveToPoint(-32, 10, 1000, {.forwards = false});
+  chassis.waitUntilDone();
+  clamp.toggle();
+
+  chassis.turnToPoint(14, -36, 800);
+  lady_brown.move_absolute(72, 200);
+
+  chassis.moveToPoint(14, -36, 5000);
+}
+
+void bluePos() {
+
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0, 0, 0);
+
+  // Move to first stake
+  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false});
+  chassis.waitUntilDone();
+  // Grab the closest MOGO mech
+  clamp.toggle();
+  pros::delay(250);
+
+  // Rotate toward blue ring
+  chassis.turnToPoint(25, -27, 1000);
+  chassis.waitUntilDone();
+
+  // Load the ring onto the stake
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
+
+  chassis.moveToPoint(35, 7, 1500);
+  chassis.waitUntilDone();
+  preroller.move_velocity(0);
+  hooks.move_velocity(0);
+
+  chassis.moveToPose(25, -4, 170, 2000, {.horizontalDrift = 2});
+  chassis.moveToPoint(32, 10, 1000, {.forwards = false});
+  chassis.waitUntilDone();
+  clamp.toggle();
+
+  chassis.turnToPoint(-14, -36, 800);
+  lady_brown.move_absolute(72, 200);
+  chassis.moveToPoint(-14, -36, 5000);
+}
+
+void blueNeg() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0, 0, 0);
+  // Move to first stake, then a bit farther at a slower speed for alignment
+  chassis.moveToPoint(0, -27, 1800, {.forwards = false, .maxSpeed = 60}, true);
+  chassis.moveToPoint(0, -35, 2050, {.forwards = false, .maxSpeed = 30}, true);
+  chassis.waitUntilDone();
+  pros::delay(500);
+  // Grab the closest MOGO mech
+  clamp.extend();
+  pros::delay(2000);
+  // Load the ring onto the stake
+  preroller.move_velocity(200);
+  hooks.move_velocity(600);
+  pros::delay(3000);
+}
+
 void test360() {
   chassis.setPose(0, 0, 0);
-  chassis.moveToPoint(0, -12, 1000, {.forwards=false});
-  chassis.turnToHeading(
-      360, 5000,
-      {.direction = lemlib::AngularDirection::CW_CLOCKWISE, .maxSpeed=70, .earlyExitRange=.00000000001});
+  chassis.moveToPoint(0, -12, 1000, {.forwards = false});
+  chassis.turnToHeading(360, 5000,
+                        {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
+                         .maxSpeed = 70,
+                         .earlyExitRange = .00000000001});
 
-  {{ // Get sensor readings
-  double distNorth = dNorth.get_distance() / 25.4; // Convert to inches
-  double distNorthW = dNorthW.get_distance() / 25.4;
+  {
+    {                                                  // Get sensor readings
+      double distNorth = dNorth.get_distance() / 25.4; // Convert to inches
+      double distNorthW = dNorthW.get_distance() / 25.4;
 
-  // Expected sensor reading at (0,0,0) - when aligned with wall
-  double expectedDistance = 9.1;
+      // Expected sensor reading at (0,0,0) - when aligned with wall
+      double expectedDistance = 9.1;
 
-  // Calculate angle error (in degrees) -  sensors are facing Y axis now
-  // If dNorthW > dNorth, robot is rotated clockwise, theta error is negative
-  double theta_error_rad = atan2((distNorthW - distNorth), 13.75); // Still use horizontal separation for angle
-  double theta_error_deg = theta_error_rad * (180 / M_PI);
+      // Calculate angle error (in degrees) -  sensors are facing Y axis now
+      // If dNorthW > dNorth, robot is rotated clockwise, theta error is
+      // negative
+      double theta_error_rad =
+          atan2((distNorthW - distNorth),
+                13.75); // Still use horizontal separation for angle
+      double theta_error_deg = theta_error_rad * (180 / M_PI);
 
-  // Calculate Y position error (in inches) - sensors facing Y axis
-  double averageDistance = (distNorth + distNorthW) / 2.0;
-  double y_error = averageDistance - expectedDistance;
+      // Calculate Y position error (in inches) - sensors facing Y axis
+      double averageDistance = (distNorth + distNorthW) / 2.0;
+      double y_error = averageDistance - expectedDistance;
 
-  // Get current pose
-  lemlib::Pose current_pose = chassis.getPose();
+      // Get current pose
+      lemlib::Pose current_pose = chassis.getPose();
 
-  // Calculate corrected pose - now correcting Y and Theta
-  double corrected_theta = current_pose.theta - theta_error_deg;
-  double corrected_y = current_pose.y - y_error;
-  double corrected_x = current_pose.x; // Keep X unchanged
+      // Calculate corrected pose - now correcting Y and Theta
+      double corrected_theta = current_pose.theta - theta_error_deg;
+      double corrected_y = current_pose.y - y_error;
+      double corrected_x = current_pose.x; // Keep X unchanged
 
-  // Set corrected pose
-  chassis.setPose(corrected_x, corrected_y, corrected_theta);
+      // Set corrected pose
+      chassis.setPose(corrected_x, corrected_y, corrected_theta);
 
-  std::cout << "dNorth: " << distNorth << " inches, dNorthW: " << distNorthW
-            << " inches" << std::endl;
-  std::cout << "Theta Error: " << theta_error_deg << " degrees, Y Error: " << y_error
-            << " inches" << std::endl;
-  std::cout << "Corrected Pose: x=" << corrected_x << ", y=" << corrected_y
-            << ", theta=" << corrected_theta << std::endl;
-  }}
+      std::cout << "dNorth: " << distNorth << " inches, dNorthW: " << distNorthW
+                << " inches" << std::endl;
+      std::cout << "Theta Error: " << theta_error_deg
+                << " degrees, Y Error: " << y_error << " inches" << std::endl;
+      std::cout << "Corrected Pose: x=" << corrected_x << ", y=" << corrected_y
+                << ", theta=" << corrected_theta << std::endl;
+    }
+  }
 }
 
 void hooks_score(int degrees, int direction) {
