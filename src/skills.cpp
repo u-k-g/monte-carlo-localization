@@ -187,7 +187,7 @@ void skills1() {
                   0); // front of robot is 6.5 in away from end of first tile
   chassis.moveToPose(0, 0, 0, 1500, {.maxSpeed=40, .earlyExitRange=.1}, false);
   */
-  chassis.setPose(0, 0, 0);
+  chassis.setPose(0, -.6, 0);
 
   // Autonomous routine for the Skills challenge - 60 seconds MAX
   /* ############################################## */
@@ -197,11 +197,13 @@ void skills1() {
   pros::delay(750);
 
   // Move to the center, then turn to and touch the right side Mogo.
-  chassis.moveToPoint(0, 16, 800);
-  chassis.turnToPoint(19, 13, 650, {.forwards = false});
-  chassis.moveToPoint(16.5, 13, 850, {.forwards = false, .earlyExitRange = 2},
+  chassis.moveToPoint(0, 15.5, 800);
+  chassis.turnToPoint(19, 15.5, 650, {.forwards = false});
+  chassis.moveToPoint(16.5, 15.5, 850, {.forwards = false, .earlyExitRange = 2},
                       false);
-  chassis.moveToPoint(19, 16, 550, {.forwards = false, .maxSpeed = 63}, false);
+  chassis.moveToPoint(20, 15.5, 550, {.forwards = false, .maxSpeed = 63}, true);
+
+  chassis.waitUntil(2);
 
   // Latch the mogo - delays just in case
   clamp.extend();
@@ -215,8 +217,8 @@ void skills1() {
 
   // Immediately move to the farthest ring. A couple of other things happen
   // while this is going on
-  chassis.moveToPose(45, 94, 0, 2050,
-                     {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = 1},
+  chassis.moveToPose(45, 95, 0, 2050,
+                     {.horizontalDrift = 8, .lead = 0.4, .earlyExitRange = .5},
                      true);
   if (antiHookJam()) { // intake is jammed
     hooks.move_relative(-50, 600);
@@ -265,7 +267,7 @@ void skills1() {
   chassis.moveToPoint(56, 64, 900, {.forwards = true, .maxSpeed = 50}, false);
   chassis.turnToPoint(64, 64, 500);
 
-  chassis.moveToPose(58, 64, 90, 900, {.forwards = true, .maxSpeed = 50}, true);
+  chassis.moveToPose(59, 64, 90, 900, {.forwards = true, .maxSpeed = 50}, true);
 
   chassis.waitUntilDone();
 
@@ -274,14 +276,14 @@ void skills1() {
       (float)(dNorth.get_distance()) / 25.4f; // Convert to inches
 
   // Only deploy lady_brown if distance is within ideal range
-  if (wallDistance >= 13.9f && wallDistance <= 15.2f) {
+  if (wallDistance >= 14.9f && wallDistance <= 16.2f) {
     // We're in the ideal range, score normally
     lady_brown.move_absolute(500, 200);
     hooks.move_relative(-70, 400);
 
   } else {
     // We're out of position - calculate where we actually are
-    float idealDistance = 14.2f; // Middle of our desired range
+    float idealDistance = 15.2f; // Middle of our desired range
     float positionError =
         wallDistance -
         idealDistance; // Positive means too far, negative means too close
@@ -291,18 +293,18 @@ void skills1() {
 
     // Update X position (since we're facing 90 degrees, X coordinate changes
     // with distance)
-    float correctedX = 58.9f - positionError;
+    float correctedX = 59.9f - positionError;
 
     chassis.setPose(correctedX, chassis.getPose().y, chassis.getPose().theta);
 
     // Now move to the correct position
     if (positionError > 0) {
       // Too far from wall, move forward
-      chassis.moveToPoint(58.9, chassis.getPose().y, 600,
+      chassis.moveToPoint(59.9, chassis.getPose().y, 600,
                           {.forwards = true, .maxSpeed = 30}, true);
     } else {
       // Too close to wall, back up
-      chassis.moveToPoint(58.9, chassis.getPose().y, 600,
+      chassis.moveToPoint(59.9, chassis.getPose().y, 600,
                           {.forwards = false, .maxSpeed = 30}, true);
     }
     chassis.waitUntilDone();
@@ -329,11 +331,11 @@ void skills1() {
 
   chassis.waitUntil(5);
 
-  chassis.turnToPoint(49, -2, 950);
+  chassis.turnToPoint(50, -2, 950);
 
   // Go close to the wall, but exit early so that the robot glides to the last
   // ring.
-  chassis.moveToPoint(49, -3, 2500,
+  chassis.moveToPoint(50, -3, 2500,
                       {.forwards = true, .maxSpeed = 45, .earlyExitRange = 1});
 
   // Start the hook at a higher speed rpm
@@ -391,19 +393,16 @@ void skills1() {
                      {.horizontalDrift = 9}, true);
 
   chassis.turnToHeading(90, 1000, {.earlyExitRange=0.1});
-  chassis.moveToPose(60, 28, 90, 1350, {.earlyExitRange = .1},
-                     false);
 
-  chassis.moveToPose(74, 28, 90, 1350, {}, false);
+  chassis.moveToPose(65, 28, 90, 1350, {.minSpeed=80, .earlyExitRange=1}, false);
 
-  /*
   chassis.waitUntilDone();
 
   // Get the distance to the wall using the distance sensor, convert to inches
   // and add the distance to tracking center (5in). Then, set the new position
   // Step 1: Reset X position and theta using south sensor
-  float new_x = 62.3 - (dSouth.get_distance() / 25.4) + 4.25;
-  std::cout << "South distance: " << dSouth.get_distance() / 25.4 << " inches"
+  float new_x = 62.3 - (dNorthW.get_distance() / 25.4) + 4.25;
+  std::cout << "South distance: " << dNorthW.get_distance() / 25.4 << " inches"
             << std::endl;
   std::cout << "Setting X pose to: " << new_x << std::endl;
 
@@ -424,6 +423,7 @@ void skills1() {
   // Reset Y, keep current X and theta
   chassis.setPose(chassis.getPose().x, new_y, chassis.getPose().theta);
 
+  /*
   // Continue with movement
   chassis.moveToPoint(chassis.getPose().x - 5, chassis.getPose().y, 600,
                       {.earlyExitRange = 1});

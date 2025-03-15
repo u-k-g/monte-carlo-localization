@@ -6,6 +6,7 @@
 #include "lemlib/timer.hpp"
 #include "liblvgl/lvgl.h"
 #include "main.h"
+#include "pros/device.hpp"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
@@ -53,7 +54,7 @@ void initialize() {
       // Print distance sensor values in inches
       pros::lcd::print(4, "N: %.2f in", dNorth.get_distance() / 25.4);
       pros::lcd::print(5, "E: %.2f in", dEast.get_distance() / 25.4);
-      pros::lcd::print(6, "S: %.2f in", dSouth.get_distance() / 25.4);
+      pros::lcd::print(6, "S: %.2f in", dNorthW.get_distance() / 25.4);
       pros::lcd::print(7, "W: %.2f in", dWest.get_distance() / 25.4);
 
       // log position telemetry
@@ -98,7 +99,10 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-void autonomous() { skills1(); }
+void autonomous() {
+  // skills1();
+  test360();
+}
 
 // Create MCL instance using the existing distance sensors
 
@@ -117,7 +121,6 @@ void autonomous() { skills1(); }
  */
 void opcontrol() {
   // autonomous();
-  test360();
   stopMCL();
   // startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
@@ -140,29 +143,22 @@ void opcontrol() {
       flagged = true;
     }
     // get left y and right y positions
-    int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-    int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
+    float leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+    float rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
     // move the robot
     chassis.tank(leftY, rightY);
 
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
 
-      // anti hook jam
-      while (hooks.get_actual_velocity() < 50) {
-        // FIX: The hook is lifted back and then hit into the target to ensure
-        // fit.
-        hooks.move_relative(-600, -600);
-        hooks.move_relative(600, 400);
-      }
       preroller.move_velocity(200);
       hooks.move_velocity(600);
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
       hooks.move_velocity(-600);
       preroller.move_velocity(-200);
     } else {
-      hooks.brake();
       preroller.brake();
+      hooks.brake();
     }
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
       clamp.toggle();
@@ -172,15 +168,15 @@ void opcontrol() {
       switch (ladyBrownState) {
       case IDLE:
         lady_brown.move_absolute(72, 200); // Move to primed position
-        hooks.move_velocity(600);          // Start intake
         ladyBrownState = PRIMED;
         break;
 
       case PRIMED:
-        lady_brown.move_absolute(500, 200); // Maintain primed position
-        hooks.move_velocity(0);             // Stop intake
-        ladyBrownState = SCORED; // optimal scoring when robot is 7.5" away from
-                                 // wall / when north sensor reads 17"
+        lady_brown.move_absolute(480, 200); // Maintain primed position
+        hooks.move_relative(-200, -600);
+        pros::delay(100);
+        ladyBrownState = SCORED; // optimal scoring when robot is x" away from
+                                 // wall / when north sensor reads 17" or 14"
         break;
 
       case SCORED:

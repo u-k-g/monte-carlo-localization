@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 using namespace lemlib;
 
@@ -15,9 +16,42 @@ void test360() {
   chassis.moveToPoint(0, -12, 1000, {.forwards=false});
   chassis.turnToHeading(
       360, 5000,
-      {.direction = lemlib::AngularDirection::CW_CLOCKWISE, .maxSpeed=100, .earlyExitRange=.00000000001});
+      {.direction = lemlib::AngularDirection::CW_CLOCKWISE, .maxSpeed=70, .earlyExitRange=.00000000001});
 
-  chassis.moveToPoint(0, 2, 1000);
+  {{ // Get sensor readings
+  double distNorth = dNorth.get_distance() / 25.4; // Convert to inches
+  double distNorthW = dNorthW.get_distance() / 25.4;
+
+  // Expected sensor reading at (0,0,0) - when aligned with wall
+  double expectedDistance = 9.1;
+
+  // Calculate angle error (in degrees) -  sensors are facing Y axis now
+  // If dNorthW > dNorth, robot is rotated clockwise, theta error is negative
+  double theta_error_rad = atan2((distNorthW - distNorth), 13.75); // Still use horizontal separation for angle
+  double theta_error_deg = theta_error_rad * (180 / M_PI);
+
+  // Calculate Y position error (in inches) - sensors facing Y axis
+  double averageDistance = (distNorth + distNorthW) / 2.0;
+  double y_error = averageDistance - expectedDistance;
+
+  // Get current pose
+  lemlib::Pose current_pose = chassis.getPose();
+
+  // Calculate corrected pose - now correcting Y and Theta
+  double corrected_theta = current_pose.theta - theta_error_deg;
+  double corrected_y = current_pose.y - y_error;
+  double corrected_x = current_pose.x; // Keep X unchanged
+
+  // Set corrected pose
+  chassis.setPose(corrected_x, corrected_y, corrected_theta);
+
+  std::cout << "dNorth: " << distNorth << " inches, dNorthW: " << distNorthW
+            << " inches" << std::endl;
+  std::cout << "Theta Error: " << theta_error_deg << " degrees, Y Error: " << y_error
+            << " inches" << std::endl;
+  std::cout << "Corrected Pose: x=" << corrected_x << ", y=" << corrected_y
+            << ", theta=" << corrected_theta << std::endl;
+  }}
 }
 
 void hooks_score(int degrees, int direction) {
@@ -191,7 +225,7 @@ void Auton5() {
   pros::delay(500);
   hooks_score(1000, 1);
 
-  // Step 6. We will pick up the bottom right’s mobile goal to score more rings
+  // Step 6. We will pick up the bottom right's mobile goal to score more rings
   // onto.
 
   chassis.moveToPose(-120, 60, 45, 5000, {.forwards = false}, false);

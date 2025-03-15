@@ -481,18 +481,18 @@ void mclTask(void *param) {
   while (mclRunning) {
     // Get distance readings and filter unreliable values
     float north = useNorthSensor ? dNorth.get() / 25.4 : -1;
-    float south = useSouthSensor ? dSouth.get() / 25.4 : -1;
+    float south = useSouthSensor ? dNorthW.get() / 25.4 : -1;
     float east = useEastSensor ? dEast.get() / 25.4 : -1;
     float west = useWestSensor ? dWest.get() / 25.4 : -1;
 
     // Apply confidence and size filters
     int north_conf = dNorth.get_confidence();
-    int south_conf = dSouth.get_confidence();
+    int south_conf = dNorthW.get_confidence();
     int east_conf = dEast.get_confidence();
     int west_conf = dWest.get_confidence();
 
     int north_size = dNorth.get_object_size();
-    int south_size = dSouth.get_object_size();
+    int south_size = dNorthW.get_object_size();
     int east_size = dEast.get_object_size();
     int west_size = dWest.get_object_size();
 

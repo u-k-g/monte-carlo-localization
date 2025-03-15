@@ -25,7 +25,7 @@ pros::Motor preroller(20, pros::v5::MotorGears::green,
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 ;
 
-pros::Imu imu(8);
+pros::Imu imu(15);
 
 pros::adi::Pneumatics clamp('A', false);
 
@@ -35,7 +35,7 @@ lemlib::Drivetrain drivetrain(
     12.875,
     lemlib::Omniwheel::OLD_325, 
     480,                       
-    2 
+    8 
 );
 
 lemlib::ControllerSettings
@@ -54,9 +54,9 @@ lemlib::ControllerSettings
 lemlib::ControllerSettings
     angularController(2.1, // proportional gain (kP)
                       0,   // integral gain (kI) try 0.1
-                      14,  // derivative gain (kD)
+                      16,  // derivative gain (kD)
                       3,   // anti windup
-                      .5,  // small error range, in degrees .5
+                      .1,  // small error range, in degrees .5
                       600, // small error range timeout, in milliseconds
                       3,   // large error range, in degrees
                       800, // large error range timeout, in milliseconds
@@ -101,5 +101,5 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController,
 
 pros::Distance dNorth(3);
 pros::Distance dEast(17);
-pros::Distance dSouth(10);
+pros::Distance dNorthW(10); //13.75
 pros::Distance dWest(16);
