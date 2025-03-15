@@ -11,7 +11,7 @@
 
 using namespace lemlib;
 
-void redNeg() {
+void redNeg() { //currently grabs goal from flat side, starts at an angle, scores preload
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
   // Move to first stake, then a bit farther at a slower speed for alignment
@@ -33,9 +33,9 @@ void redPos() {
   chassis.setPose(0, 0, 0);
 
   // Move to first stake
-  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false});
+  chassis.moveToPose(0, -28, 0, 2000, {.forwards = false}); //goal from corner
   chassis.waitUntilDone();
-  // Grab the closest MOGO mech
+  // Grab the closest goal
   clamp.toggle();
   pros::delay(250);
 
@@ -65,7 +65,7 @@ void redPos() {
   chassis.moveToPoint(14, -36, 5000);
 }
 
-void bluePos() {
+void bluePos() { //corner side of goal
 
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
   chassis.setPose(0, 0, 0);
