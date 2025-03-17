@@ -134,7 +134,11 @@ void blueNeg() {
 void test360() {
   chassis.setPose(0, 0, 0);
   chassis.moveToPoint(0, -12, 1000, {.forwards = false});
-  chassis.turnToHeading(360, 5000,
+  chassis.turnToHeading(180, 5000,
+                        {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
+                         .maxSpeed = 70,
+                         .earlyExitRange = .00000000001});
+  chassis.turnToHeading(0, 5000,
                         {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
                          .maxSpeed = 70,
                          .earlyExitRange = .00000000001});

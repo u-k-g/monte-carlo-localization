@@ -72,10 +72,10 @@ lemlib::TrackingWheel horizontal1(&horizontalRotation, lemlib::Omniwheel::NEW_2,
                                   1.25);
 
 // Update the OdomSensors object to include the new horizontal tracking wheel
-lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
+lemlib::OdomSensors sensors(&horizontal1, // vertical tracking wheel
                             nullptr, // vertical tracking wheel 2, set to
                                      // nullptr as we don't have a second one
-                            &horizontal1, // horizontal tracking wheel
+                            nullptr, // horizontal tracking wheel
                             nullptr,      // horizontal tracking wheel 2, set to
                                      // nullptr as we don't have a second one
                             &imu // inertial sensor

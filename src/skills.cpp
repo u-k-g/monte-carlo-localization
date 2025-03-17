@@ -196,10 +196,10 @@ void skills1() {
 
   // Move to the center, then turn to and touch the right side Mogo.
   chassis.moveToPoint(0, 15.5, 800);
-  chassis.turnToPoint(19, 15.5, 800, {.forwards = false,.maxSpeed=60});
-  chassis.moveToPoint(16.5, 15.5, 850, {.forwards = false, .maxSpeed=60, .earlyExitRange = 2},
+  chassis.turnToPoint(19, 15.5, 800, {.forwards = false,.direction=lemlib::AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed=100});
+  chassis.moveToPoint(16.5, 15.5, 850, {.forwards = false, .maxSpeed=100, .earlyExitRange = 2},
                       false);
-  chassis.moveToPoint(20, 15.5, 550, {.forwards = false, .maxSpeed = 63}, true);
+  chassis.moveToPoint(20, 15.5, 550, {.forwards = false, .maxSpeed = 100}, true);
 
   chassis.waitUntil(2);
 
@@ -386,7 +386,7 @@ void skills1() {
   // Move to the top edge of the first tile, preparing for alignment. Then move
   // back into the wall to use the distance sensor to reorient. 0 theta and fix
   // the x
-  /** 
+  
   chassis.moveToPose(46, 28, 90, 1000,
                      {.horizontalDrift = 9}, true);
 
@@ -401,10 +401,9 @@ void skills1() {
   // Step 1: Reset X position and theta using south sensor
   float new_x = 62.3 - (dNorthW.get_distance() / 25.4) + 4.25;
   float old_x = chassis.getPose().x;
-  pros::lcd::print(4,"X Position changed from %.2f to %.2f", (old_x,new_x));
   pros::delay(2000);
   // Reset X and theta, keep current Y
-  chassis.setPose(new_x, chassis.getPose().y, 0);
+  chassis.setPose(new_x, chassis.getPose().y, 270);
   // Move forward to clear the mobile goal
   chassis.moveToPoint(chassis.getPose().x - 24, chassis.getPose().y, 2000, {.maxSpeed=50},
                       false);
@@ -416,7 +415,7 @@ void skills1() {
   pros::lcd::print(6, "Fixed X and Y positions");
   // Reset Y, keep current X and theta
   chassis.setPose(chassis.getPose().x, new_y, chassis.getPose().theta);
-  // Continue with movement */
+  // Continue with movement 
   chassis.moveToPoint(chassis.getPose().x - 5, chassis.getPose().y, 600,
                       {.earlyExitRange = 1});
 

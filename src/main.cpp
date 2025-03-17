@@ -33,7 +33,6 @@ rd::Console console;
  * "I was pressed!" and nothing.
  */
 
-
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -47,12 +46,12 @@ void initialize() {
   chassis.setPose(0, 0, 0);
   lady_brown.set_zero_position_all(0);
   selector.on_select([](std::optional<rd::Selector::routine_t> routine) {
-		if (routine == std::nullopt) {
-			std::cout << "No routine selected" << std::endl;
-		} else {
-			std::cout << "Selected Routine: " << routine.value().name << std::endl;
-		}
-	});
+    if (routine == std::nullopt) {
+      std::cout << "No routine selected" << std::endl;
+    } else {
+      std::cout << "Selected Routine: " << routine.value().name << std::endl;
+    }
+  });
   // /*
   pros::Task screenTask([&]() {
     while (true) {
@@ -114,8 +113,9 @@ void competition_initialize() { selector.focus(); }
 
 void autonomous() {
   // redNeg();
-  // skills1();
-  Auton3();
+  skills1();
+  // Auton3();
+  // test360();
   selector.run_auton();
 }
 
@@ -137,6 +137,7 @@ void autonomous() {
 void opcontrol() {
   // autonomous();
   stopMCL();
+  hooks.move_absolute(600, 600);
   // startMCL(chassis);
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   bool flagged = false;
