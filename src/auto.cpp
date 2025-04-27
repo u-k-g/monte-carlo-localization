@@ -135,13 +135,22 @@ void test360() {
   chassis.setPose(0, 0, 0);
   chassis.moveToPoint(0, -12, 1000, {.forwards = false});
   chassis.turnToHeading(180, 5000,
+<<<<<<< HEAD
                         {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
                          .maxSpeed = 70,
                          .earlyExitRange = .00000000001});
   chassis.turnToHeading(0, 5000,
+=======
+>>>>>>> 252dc33977fe015358a5a093025069c8273f7873
                         {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
-                         .maxSpeed = 70,
-                         .earlyExitRange = .00000000001});
+                         .maxSpeed = 100,
+                         .earlyExitRange = .00000000001},
+                        false);
+  chassis.turnToHeading(0, 5000,
+                        {.direction = lemlib::AngularDirection::CW_CLOCKWISE,
+                         .maxSpeed = 100,
+                         .earlyExitRange = .00000000001},
+                        false);
 
   {
     {                                                  // Get sensor readings
