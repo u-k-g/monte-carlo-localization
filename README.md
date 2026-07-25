@@ -1,132 +1,115 @@
-<h1 align="center">Monte Carlo Localization for VEX V5</h1>
+<h1 align="center">monte carlo localization</h1>
 
 <p align="center">
-    <a href="https://github.com/uz-g/monte-carlo-localization/pulse"><img src="https://img.shields.io/github/last-commit/uz-g/monte-carlo-localization?style=for-the-badge&logo=github&color=7dc4e4&logoColor=D9E0EE&labelColor=302D41"></a>
-    <a href="https://github.com/uz-g/monte-carlo-localization/stargazers"><img src="https://img.shields.io/github/stars/uz-g/monte-carlo-localization?style=for-the-badge&logo=apachespark&color=eed49f&logoColor=D9E0EE&labelColor=302D41"></a>
+  particle-filter localization and competition robot control for VEX V5.
 </p>
-
-This project implements an advanced motion control system for the VEX V5 platform, with a core focus on **Monte Carlo Localization (MCL)**, designed for the VEX High Stakes competition season. It utilizes PROS and LemLib.
-
-## 🚀 Core Feature: Monte Carlo Localization
-
-At the heart of this system is a full-featured Monte Carlo Localization (MCL) engine, implemented in [`src/monte.cpp`](src/monte.cpp). MCL enables the robot to:
-
-- Precisely estimate its global position and orientation on the field, even with noisy or imperfect sensor data
-- Fuse data from IMU, tracking wheels, and multiple distance sensors for maximum reliability
-- Continuously correct for odometry drift, wheel slip, and field inconsistencies
-- Power advanced autonomous routines and complex path planning
-
-## Why Monte Carlo Localization?
-
-Traditional VEX V5 robots rely on odometry and IMU sensors for local movement tracking. However, these methods are prone to accumulating errors and can be disrupted by real-world factors like wheel slip or field imperfections, leading to unreliable autonomous performance.
-
-**Monte Carlo Localization (MCL)** solves these problems by maintaining a probabilistic estimate of the robot's global position. By fusing multiple sensor inputs and using a particle filter, MCL delivers:
-
-- Robust, accurate global position tracking
-- Resilience to sensor noise and field inconsistencies
-- Consistent, repeatable autonomous routines
-
-This approach directly addresses the root causes of autonomous failures and elevates the reliability of VEX V5 robots in competition.
-
-## 🛠️ General Features
-
-- Dual joystick tank drive with an exponential drive curve
-- Autonomous mode selection via LVGL GUI
-- Intake control system
-- Pneumatic systems for mobile goal clamp
-- Temperature monitoring for drivetrain and intake motors
-- Reverse drive functionality
-- Match timer with controller rumble alert
-- Numerous driver convenience features
-
-## ⚙️ Hardware Configuration
-
-- **Drivetrain:** 3 motors per side (66W)
-- **Intake:** 1.5 motors (16.5W)
-- **Lady Brown:** 0.5 motors (5.5W)
-- **Sensors:**
-    - IMU
-    - Horizontal tracking wheel
-    - 4 Distance sensors
-- **Pneumatics:**
-    - Mobile goal clamp (large)
-
-## 🕹️ Usage
-
-1. Flash the program to your VEX V5 brain.
-2. Run the program.
-3. Use the LVGL GUI on the brain screen to select an autonomous mode.
-4. In driver control:
-    - Left/Right Joysticks: Control drivetrain
-    - R1/R2 Buttons: Control intake
-    - L1 Button: Toggle mobile goal clamp
-    - L2 Button: Toggle intake position
-    - B Button: Toggle reverse drive
-
-## 🤖 Autonomous Modes
-
-- **Close Side (Default)**
-- **Far Side**
-- **Skills**
-- **Off**
-
-Autonomous routines are implemented in [`src/auto.cpp`](src/auto.cpp) and [`src/skills.cpp`](src/skills.cpp).
-
-## 🧠 Monte Carlo Localization Update Cycle
-
-The following code snippet illustrates the core Monte Carlo Localization (MCL) update cycle implemented in this project:
 
 <p align="center">
-  <img src="include/mcl.png" alt="Monte Carlo Localization Update Cycle" width="900"/>
+  built with <a href="https://pros.cs.purdue.edu/v5/">PROS</a>,
+  <a href="https://lemlib.readthedocs.io/">LemLib</a> and
+  <a href="https://docs.lvgl.io/">LVGL</a>.
 </p>
 
-This function demonstrates the essential steps of MCL:
+<details open>
+<summary><strong>overview</strong></summary>
 
-1. **Motion Update (Prediction):** Predicts the robot's new pose based on odometry (robot movement).
-2. **Measurement Update (Correction):** Adjusts the particle weights using distance sensor measurements.
-3. **Resampling:** Resamples the particle set based on their weights to focus on the most likely poses.
-4. **Pose Estimation:** Computes the robot's estimated position and updates the chassis accordingly.
+This project explores Monte Carlo localization on a VEX V5 competition robot. It combines
+odometry with field-facing distance sensors to maintain a probabilistic estimate of the robot's
+global position and heading.
 
-This cycle enables robust and accurate localization on the VEX V5 platform, even in the presence of sensor noise and uncertainty.
+- 7,500-particle localization filter
+- odometry-based motion prediction
+- distance-sensor measurement correction
+- weighted resampling and filtered pose estimation
+- autonomous selection and competition-ready driver control
 
-## 📁 Key Files and Directories
+<p align="center">
+  <img src="include/mcl.png" width="900" alt="Monte Carlo localization update cycle">
+</p>
 
-- [`src/main.cpp`](src/main.cpp): Main entry point, driver control logic, and GUI interaction
-- [`src/auto.cpp`](src/auto.cpp): Autonomous routines for matches
-- [`src/skills.cpp`](src/skills.cpp): Autonomous routines for skills challenges
-- [`src/monte.cpp`](src/monte.cpp): Monte Carlo Localization implementation
-- [`src/globals.cpp`](src/globals.cpp): Global variables
-- [`include/main.h`](include/main.h): Header for main logic
-- [`include/globals.h`](include/globals.h): Header for globals
-- [`include/robot/`](include/robot/): Robot-specific configurations and classes
-- [`liblvgl/`](liblvgl/): LVGL graphics library
-- [`lemlib/`](lemlib/): LemLib drivetrain and odometry library
-- [`project.pros`](project.pros): PROS project configuration
-- [`Makefile`](Makefile): Build instructions
+</details>
 
-## 📚 Libraries Used
+<details open>
+<summary><strong>localization</strong></summary>
 
-- [PROS](https://pros.cs.purdue.edu/v5/pros-4/): C/C++ SDK for VEX V5
-- [LemLib](https://lemlib.readthedocs.io/): Advanced drivetrain control and odometry
-- [LVGL](https://docs.lvgl.io/master/): Lightweight graphics library for embedded systems
+Wheel odometry is fast and locally accurate, but error accumulates through wheel slip, sensor
+noise and field inconsistencies. The particle filter limits that drift by repeatedly comparing
+possible robot poses against distance measurements from the field.
 
-## 🏗️ Building the Project
+Each update follows four stages:
 
-1. Ensure you have the PROS CLI installed.
-2. Navigate to the project root in your terminal.
-3. Run:
-   ```zsh
-   pros m
-   ```
+1. **prediction** — move every particle using the latest odometry delta
+2. **correction** — compare predicted and measured distance-sensor readings
+3. **resampling** — replace unlikely particles with samples from higher-weight regions
+4. **estimation** — calculate a filtered pose and feed it back into the chassis
 
-## 🔌 Flashing to V5 Brain
+The implementation lives in [`src/monte.cpp`](src/monte.cpp).
 
-1. Connect your VEX V5 Brain to your computer.
-2. Run:
-   ```zsh
-   pros u
-   ```
+</details>
 
-## 📝 License
+<details open>
+<summary><strong>setup</strong></summary>
+
+1. install the [PROS CLI](https://pros.cs.purdue.edu/v5/getting-started/)
+2. clone this repository
+3. build the project with `pros m`
+4. connect a VEX V5 Brain and upload with `pros u`
+
+The configured robot uses a six-motor tank drivetrain, an inertial sensor, a horizontal tracking
+wheel and four distance sensors. Motor, sensor and pneumatic ports are defined in
+[`src/globals.cpp`](src/globals.cpp).
+
+</details>
+
+<details open>
+<summary><strong>usage</strong></summary>
+
+Select an autonomous routine on the V5 Brain before the match:
+
+- `redNeg`
+- `redPos`
+- `blueNeg`
+- `bluePos`
+- `skills`
+
+Driver controls:
+
+- left and right joysticks control the tank drivetrain
+- `L1` runs the intake forward
+- `L2` runs the intake in reverse
+- `R1` advances the Lady Brown mechanism through idle, primed and scored positions
+- `R2` toggles the mobile-goal clamp
+
+</details>
+
+<details>
+<summary><strong>project structure</strong></summary>
+
+- [`src/main.cpp`](src/main.cpp) — competition lifecycle, autonomous selector and driver control
+- [`src/monte.cpp`](src/monte.cpp) — particle-filter implementation
+- [`src/auto.cpp`](src/auto.cpp) — match autonomous routines
+- [`src/skills.cpp`](src/skills.cpp) — skills autonomous routine
+- [`src/globals.cpp`](src/globals.cpp) — chassis, motors, sensors and pneumatics
+- [`include/robot/`](include/robot/) — robot-specific interfaces
+- [`project.pros`](project.pros) — PROS project configuration
+
+</details>
+
+<details>
+<summary><strong>development</strong></summary>
+
+- `pros m` builds the project
+- `pros u` builds and uploads it to the connected V5 Brain
+- `pros mu` performs both steps
+
+The project targets C++20 and includes its PROS, LemLib, LVGL and Robodash dependencies in the
+repository.
+
+</details>
+
+<details>
+<summary><strong>license</strong></summary>
 
 This project is currently unlicensed.
+
+</details>
